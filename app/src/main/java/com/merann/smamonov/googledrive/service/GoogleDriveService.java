@@ -11,9 +11,7 @@ import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResolvingResultCallbacks;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveFolder;
@@ -22,17 +20,30 @@ import com.google.android.gms.drive.MetadataBuffer;
 import com.google.android.gms.drive.MetadataChangeSet;
 import com.merann.smamonov.googledrive.R;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * Created by samam_000 on 01.12.2015.
  */
 public class GoogleDriveService extends Service {
 
+
+    static public final int AUTHENTICATION_PERFORM_REQUEST = 100;
+    static public final int GOOGLE_DRIVE_CONNECTED = 101;
+    static public final int GOOGLE_DRIVE_DISCONNECTED = 102;
+
     static private final String LOG_TAG = "GoogleDrive";
     private GoogleApiClient mGoogleApiClient;
 
     static public final String COMMAND_PARAMETER_NAME = "COMMAND";
     static public final String COMMAND_CONNECT = "CONNECT";
+
+    static public final String STORAGE_FOLDER = "TEST_FOLDER";
+
+    private List<Metadata> mFiles = new ArrayList<>();
+    DriveFolder mDriveFolder = null;
 
     @Nullable
     @Override
@@ -65,8 +76,7 @@ public class GoogleDriveService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(LOG_TAG, "onStartCommand");
 
-        if(intent == null)
-        {
+        if (intent == null) {
             return super.onStartCommand(intent, flags, startId);
         }
 
@@ -105,19 +115,21 @@ public class GoogleDriveService extends Service {
                         @Override
                         public void onConnected(Bundle bundle) {
                             Log.d(LOG_TAG, "onConnected");
+                            sendBroadcast(createNotificationIntend(GOOGLE_DRIVE_CONNECTED));
                             loadFileMetagata();
                         }
 
                         @Override
                         public void onConnectionSuspended(int i) {
                             Log.d(LOG_TAG, "onConnectionSuspended");
+                            sendBroadcast(createNotificationIntend(GOOGLE_DRIVE_DISCONNECTED));
                         }
                     })
                     .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                         @Override
                         public void onConnectionFailed(ConnectionResult connectionResult) {
                             Log.e(LOG_TAG, "onConnectionFailed:" + connectionResult.toString());
-                            Intent intent = new Intent(getResources().getString(R.string.on_drive_connection_failed))
+                            Intent intent = createNotificationIntend(AUTHENTICATION_PERFORM_REQUEST)
                                     .putExtra(getResources().getString(R.string.on_drive_connection_failed_data), connectionResult);
                             sendBroadcast(intent);
                         }
@@ -160,8 +172,35 @@ public class GoogleDriveService extends Service {
                      index++) {
                     Metadata metadata = metadataBuffer.get(index);
                     Log.d(LOG_TAG, "loadFileMetagata::onSuccess: " + index + ": " + metadata.getTitle());
+                    mFiles.add(metadata);
                 }
             }
         });
+    }
+
+    void createFolder(DriveFolder rootFolder, final String newFolderName) {
+        Log.d(LOG_TAG, "createFolder newFolderName:" + newFolderName);
+
+        MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
+                .setTitle(newFolderName)
+                .build();
+
+        rootFolder.createFolder(mGoogleApiClient, changeSet).setResultCallback(new ResultCallback<DriveFolder.DriveFolderResult>() {
+            @Override
+            public void onResult(DriveFolder.DriveFolderResult driveFolderResult) {
+                Log.d(LOG_TAG, "createFolder::onResult");
+                DriveFolder driveFolder = driveFolderResult.getDriveFolder();
+
+                if (driveFolder != null) {
+                    Log.d(LOG_TAG, "created folder id:" + driveFolder.getDriveId());
+                } else {
+                    Log.d(LOG_TAG, "unable to create folder " + newFolderName);
+                }
+            }
+        });
+    }
+
+    private Intent createNotificationIntend(int messageType) {
+        return new Intent(getResources().getString(R.string.drive_intend_notification)).putExtra(getResources().getString(R.string.drive_intend_message_type), messageType);
     }
 }

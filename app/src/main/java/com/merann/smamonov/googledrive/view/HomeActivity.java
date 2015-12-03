@@ -23,9 +23,8 @@ import com.merann.smamonov.googledrive.service.GoogleDriveService;
 public class HomeActivity extends AppCompatActivity {
 
     public final String LOG_TAG = "GoogleDrive";
-    private final int AUTHENTICATION_PERFORM_REQUEST = 100;
 
-    BroadcastReceiver onDriveConnectionFailedBroadcastReceiver;
+    BroadcastReceiver driveBroadcastReceiverHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,23 +42,52 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
-        onDriveConnectionFailedBroadcastReceiver = new BroadcastReceiver() {
+        driveBroadcastReceiverHandler = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                final ConnectionResult connectionResult = intent.getParcelableExtra(getResources().getString(R.string.on_drive_connection_failed_data));
-                if (connectionResult.hasResolution()) {
-                    try {
-                        connectionResult.startResolutionForResult(HomeActivity.this, AUTHENTICATION_PERFORM_REQUEST);
-                    } catch (IntentSender.SendIntentException e) {
-                        Log.d(LOG_TAG, "AUTHENTICATION_PERFORM_REQUEST e" + e.getMessage());
-                    }
-                } else {
-                    GooglePlayServicesUtil.getErrorDialog(connectionResult.getErrorCode(), HomeActivity.this, 0).show();
-                }
+                handleIntendFromDriveService(intent);
             }
         };
-        IntentFilter onDriveConnectionFailedIntendFilter = new IntentFilter(getResources().getString(R.string.on_drive_connection_failed));
-        registerReceiver(onDriveConnectionFailedBroadcastReceiver, onDriveConnectionFailedIntendFilter);
+
+        IntentFilter onDriveNotificationIntendFilter = new IntentFilter(getResources().getString(R.string.drive_intend_notification));
+        registerReceiver(driveBroadcastReceiverHandler, onDriveNotificationIntendFilter);
+    }
+
+    private void handleIntendFromDriveService(Intent intent) {
+
+        int messageType = intent.getIntExtra(getResources().getString(R.string.drive_intend_message_type), 0);
+
+        if (messageType == 0) {
+            Log.d(LOG_TAG, "Unable to handle notification from GoogleDriveService");
+        } else {
+
+            switch (messageType) {
+                case GoogleDriveService.AUTHENTICATION_PERFORM_REQUEST: {
+                    onServiceConnected(false);
+                    final ConnectionResult connectionResult = intent.getParcelableExtra(getResources().getString(R.string.on_drive_connection_failed_data));
+                    if (connectionResult.hasResolution()) {
+                        try {
+                            connectionResult.startResolutionForResult(HomeActivity.this, GoogleDriveService.AUTHENTICATION_PERFORM_REQUEST);
+                        } catch (IntentSender.SendIntentException e) {
+                            Log.d(LOG_TAG, "AUTHENTICATION_PERFORM_REQUEST e" + e.getMessage());
+                        }
+                    } else {
+                        GooglePlayServicesUtil.getErrorDialog(connectionResult.getErrorCode(), HomeActivity.this, 0).show();
+                    }
+                    break;
+                }
+
+                case GoogleDriveService.GOOGLE_DRIVE_CONNECTED: {
+                    onServiceConnected(true);
+                    break;
+                }
+
+                case GoogleDriveService.GOOGLE_DRIVE_DISCONNECTED: {
+                    onServiceConnected(false);
+                    break;
+                }
+            }
+        }
     }
 
     @Override
@@ -84,6 +112,15 @@ public class HomeActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public void onServiceConnected(boolean isConnected) {
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        if (isConnected) {
+            toolbar.setBackgroundColor(getResources().getColor(R.color.toolBarColorConnected));
+        } else {
+            toolbar.setBackgroundColor(getResources().getColor(R.color.toolBarColorDisconnected));
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -98,8 +135,7 @@ public class HomeActivity extends AppCompatActivity {
         Log.d(LOG_TAG, "onActivityResult requestCode:" + requestCode + " resultCode:" + resultCode);
 
         switch (requestCode) {
-            case AUTHENTICATION_PERFORM_REQUEST:
-
+            case GoogleDriveService.AUTHENTICATION_PERFORM_REQUEST: {
                 if (resultCode == RESULT_OK) {
                     Log.d(LOG_TAG, "onActivityResult AUTHENTICATION_PERFORM_REQUEST result is RESULT_OK, starting service");
                     Intent startServiceIntend = new Intent(this, GoogleDriveService.class);
@@ -109,6 +145,8 @@ public class HomeActivity extends AppCompatActivity {
                     Log.e(LOG_TAG, "onActivityResult AUTHENTICATION_PERFORM_REQUEST error resultCode " + resultCode);
                 }
                 break;
+            }
+
             default:
                 break;
         }
@@ -117,6 +155,6 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        unregisterReceiver(onDriveConnectionFailedBroadcastReceiver);
+        unregisterReceiver(driveBroadcastReceiverHandler);
     }
 }

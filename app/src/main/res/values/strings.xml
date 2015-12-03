@@ -4,6 +4,8 @@
     <string name="package_name">com.merann.smamonov.googledrive</string>
     <string name="oauth2_0_client_id">1083577094554-2jnlqpkjrbusignqvii4d9krc60pb69s.apps.googleusercontent.com</string>
     <string name="home_activity_command">home_activity_command</string>
-    <string name="on_drive_connection_failed">on_drive_connection_failed</string>
+    <string name="drive_intend_notification">drive_intend_notification</string>
+    <string name="drive_intend_message_type">drive_intend_message_type</string>
     <string name="on_drive_connection_failed_data">on_drive_connection_failed_data</string>
+
 </resources>
