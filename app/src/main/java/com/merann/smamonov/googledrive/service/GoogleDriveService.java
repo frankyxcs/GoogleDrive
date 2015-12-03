@@ -10,7 +10,16 @@ import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResolvingResultCallbacks;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveApi;
+import com.google.android.gms.drive.DriveFolder;
+import com.google.android.gms.drive.Metadata;
+import com.google.android.gms.drive.MetadataBuffer;
+import com.google.android.gms.drive.MetadataChangeSet;
 import com.merann.smamonov.googledrive.R;
 
 
@@ -56,6 +65,11 @@ public class GoogleDriveService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(LOG_TAG, "onStartCommand");
 
+        if(intent == null)
+        {
+            return super.onStartCommand(intent, flags, startId);
+        }
+
         String command_name = intent.getStringExtra(COMMAND_PARAMETER_NAME);
 
         if (command_name != null) {
@@ -80,7 +94,7 @@ public class GoogleDriveService extends Service {
         if (mGoogleApiClient != null) {
 
             Log.d(LOG_TAG, "connect mGoogleApiClient exists");
-            Log.d(LOG_TAG, "connect isConnecting:" + mGoogleApiClient.isConnecting() + " isConnected:" +  mGoogleApiClient.isConnected());
+            Log.d(LOG_TAG, "connect isConnecting:" + mGoogleApiClient.isConnecting() + " isConnected:" + mGoogleApiClient.isConnected());
             mGoogleApiClient.connect();
         } else {
             Log.d(LOG_TAG, "connect mGoogleApiClient doesn't exists");
@@ -91,9 +105,7 @@ public class GoogleDriveService extends Service {
                         @Override
                         public void onConnected(Bundle bundle) {
                             Log.d(LOG_TAG, "onConnected");
-//                            DriveFolder driveFolder = Drive.DriveApi.getRootFolder(mGoogleApiClient);
-//                            Log.d(LOG_TAG, "Root folder is " + driveFolder.toString());
-//                            PendingResult<DriveApi.MetadataBufferResult> result = driveFolder.listChildren(mGoogleApiClient);
+                            loadFileMetagata();
                         }
 
                         @Override
@@ -114,5 +126,42 @@ public class GoogleDriveService extends Service {
             Log.d(LOG_TAG, "connect mGoogleApiClient.connect()");
             mGoogleApiClient.connect();
         }
+    }
+
+
+    void loadFileMetagata() {
+        Log.d(LOG_TAG, "loadFileMetagata");
+        DriveFolder driveFolder = Drive.DriveApi.getRootFolder(mGoogleApiClient);
+        Log.d(LOG_TAG, "Root folder is " + driveFolder.getDriveId());
+
+//        MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
+//                .setTitle("My_test_folder")
+//                .build();
+//
+//        driveFolder.createFolder(mGoogleApiClient, changeSet).setResultCallback(new ResultCallback<DriveFolder.DriveFolderResult>() {
+//            @Override
+//            public void onResult(DriveFolder.DriveFolderResult driveFolderResult) {
+//                Log.d(LOG_TAG, "loadFileMetagata::oncreateFolderResult");
+//                DriveFolder driveFolder1 = driveFolderResult.getDriveFolder();
+//                Log.d(LOG_TAG, "new folder is created:" + driveFolder1.getDriveId());
+//            }
+//        });
+
+        final PendingResult<DriveApi.MetadataBufferResult> result = driveFolder.listChildren(mGoogleApiClient);
+        result.setResultCallback(new ResultCallback<DriveApi.MetadataBufferResult>() {
+            @Override
+            public void onResult(DriveApi.MetadataBufferResult metadataBufferResult) {
+                Log.d(LOG_TAG, "loadFileMetagata::onResult: ");
+
+                MetadataBuffer metadataBuffer = metadataBufferResult.getMetadataBuffer();
+
+                for (int index = 0;
+                     index < metadataBuffer.getCount();
+                     index++) {
+                    Metadata metadata = metadataBuffer.get(index);
+                    Log.d(LOG_TAG, "loadFileMetagata::onSuccess: " + index + ": " + metadata.getTitle());
+                }
+            }
+        });
     }
 }
