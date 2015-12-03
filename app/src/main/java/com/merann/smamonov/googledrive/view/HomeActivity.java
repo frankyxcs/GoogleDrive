@@ -41,7 +41,11 @@ public class HomeActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+    }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
         driveBroadcastReceiverHandler = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -106,6 +110,12 @@ public class HomeActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Log.d(LOG_TAG, "onOptionsItemSelected: action_settings");
+            return true;
+        }
+        else if (id == R.id.action_sync)
+        {
+            Log.d(LOG_TAG, "onOptionsItemSelected: action_sync");
             return true;
         }
 
@@ -124,9 +134,10 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        /*
         Intent startServiceIntend = new Intent(this, GoogleDriveService.class);
         startServiceIntend.putExtra(GoogleDriveService.COMMAND_PARAMETER_NAME, GoogleDriveService.COMMAND_CONNECT);
-        startService(startServiceIntend);
+        startService(startServiceIntend);*/
     }
 
     @Override
