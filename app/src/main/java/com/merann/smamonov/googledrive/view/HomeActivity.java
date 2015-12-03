@@ -10,6 +10,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,6 +21,9 @@ import com.merann.smamonov.googledrive.R;
 import com.merann.smamonov.googledrive.service.GoogleDriveService;
 
 public class HomeActivity extends AppCompatActivity {
+
+    public final String LOG_TAG = "GoogleDrive";
+    private final int AUTHENTICATION_PERFORM_REQUEST = 100;
 
     BroadcastReceiver onDriveConnectionFailedBroadcastReceiver;
 
@@ -44,11 +48,10 @@ public class HomeActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
                 final ConnectionResult connectionResult = intent.getParcelableExtra(getResources().getString(R.string.on_drive_connection_failed_data));
                 if (connectionResult.hasResolution()) {
-
                     try {
-                        connectionResult.startResolutionForResult(HomeActivity.this, 7);
+                        connectionResult.startResolutionForResult(HomeActivity.this, AUTHENTICATION_PERFORM_REQUEST);
                     } catch (IntentSender.SendIntentException e) {
-
+                        Log.d(LOG_TAG, "AUTHENTICATION_PERFORM_REQUEST e" + e.getMessage());
                     }
                 } else {
                     GooglePlayServicesUtil.getErrorDialog(connectionResult.getErrorCode(), HomeActivity.this, 0).show();
@@ -84,13 +87,31 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        startService(new Intent(this, GoogleDriveService.class));
+        Intent startServiceIntend = new Intent(this, GoogleDriveService.class);
+        startServiceIntend.putExtra(GoogleDriveService.COMMAND_PARAMETER_NAME, GoogleDriveService.COMMAND_CONNECT);
+        startService(startServiceIntend);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        System.err.println("onActivityResult requestCode" + requestCode + " resultCode" + resultCode);
+        Log.d(LOG_TAG, "onActivityResult requestCode:" + requestCode + " resultCode:" + resultCode);
+
+        switch (requestCode) {
+            case AUTHENTICATION_PERFORM_REQUEST:
+
+                if (resultCode == RESULT_OK) {
+                    Log.d(LOG_TAG, "onActivityResult AUTHENTICATION_PERFORM_REQUEST result is RESULT_OK, starting service");
+                    Intent startServiceIntend = new Intent(this, GoogleDriveService.class);
+                    startServiceIntend.putExtra(GoogleDriveService.COMMAND_PARAMETER_NAME, GoogleDriveService.COMMAND_CONNECT);
+                    startService(startServiceIntend);
+                } else {
+                    Log.e(LOG_TAG, "onActivityResult AUTHENTICATION_PERFORM_REQUEST error resultCode " + resultCode);
+                }
+                break;
+            default:
+                break;
+        }
     }
 
     @Override
