@@ -22,7 +22,7 @@ import com.merann.smamonov.googledrive.service.GoogleDriveService;
 
 public class HomeActivity extends AppCompatActivity {
 
-    public final String LOG_TAG = "GoogleDrive";
+    public final String LOG_TAG = "GoogleDriveHomeAct";
 
     BroadcastReceiver driveBroadcastReceiverHandler;
 
@@ -111,6 +111,7 @@ public class HomeActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Log.d(LOG_TAG, "onOptionsItemSelected: action_settings");
+            showSettingsActivity();
             return true;
         }
         else if (id == R.id.action_sync)
@@ -167,5 +168,11 @@ public class HomeActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         unregisterReceiver(driveBroadcastReceiverHandler);
+    }
+
+    private void showSettingsActivity()
+    {
+        Intent settingsIntent = new Intent(this, SettingsActivity.class);
+        startActivity(settingsIntent);
     }
 }
