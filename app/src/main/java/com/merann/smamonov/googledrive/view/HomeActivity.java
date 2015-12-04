@@ -134,10 +134,10 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        /*
+
         Intent startServiceIntend = new Intent(this, GoogleDriveService.class);
         startServiceIntend.putExtra(GoogleDriveService.COMMAND_PARAMETER_NAME, GoogleDriveService.COMMAND_CONNECT);
-        startService(startServiceIntend);*/
+        startService(startServiceIntend);
     }
 
     @Override
