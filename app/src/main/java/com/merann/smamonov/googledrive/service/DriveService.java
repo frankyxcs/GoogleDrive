@@ -1,11 +1,7 @@
 package com.merann.smamonov.googledrive.service;
 
-import android.app.Service;
 import android.content.Intent;
-import android.os.Binder;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -18,87 +14,90 @@ import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.Metadata;
 import com.google.android.gms.drive.MetadataBuffer;
 import com.google.android.gms.drive.MetadataChangeSet;
-import com.merann.smamonov.googledrive.R;
 
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
- * Created by samam_000 on 01.12.2015.
+ * Created by samam_000 on 06.12.2015.
  */
-public class GoogleDriveService extends Service {
+public class DriveService extends BaseService {
 
-
-    static public final int AUTHENTICATION_PERFORM_REQUEST = 100;
-    static public final int GOOGLE_DRIVE_CONNECTED = 101;
-    static public final int GOOGLE_DRIVE_DISCONNECTED = 102;
-
-    static private final String LOG_TAG = "GoogleDrive";
-    private GoogleApiClient mGoogleApiClient;
-
-    static public final String COMMAND_PARAMETER_NAME = "COMMAND";
-    static public final String COMMAND_CONNECT = "CONNECT";
-
-    static public final String STORAGE_FOLDER = "TEST_FOLDER";
-
+    static public final String INTEND_STRING = "com.merann.smamonov.googledrive.DriveService";
+    static private final String LOG_TAG = "DriveService";
     private List<Metadata> mFiles = new ArrayList<>();
-    DriveFolder mDriveFolder = null;
+    String mFolderName;
+    int mSyncPeriod;
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        Log.d(LOG_TAG, "onBind");
-        return new Binder();
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent) {
-        Log.d(LOG_TAG, "onBind");
-        return super.onUnbind(intent);
+    public DriveService() {
+        super(INTEND_STRING);
+        Log.d(LOG_TAG, "DriveService");
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(LOG_TAG, "onCreate");
-        //connect();
+
+        addMessageHandler(Message.AUTHENTICATION_PERFORM_RESPONSE, new IMessageHandler() {
+            @Override
+            public void onIntent(Intent intent) {
+                Log.d(LOG_TAG, "AUTHENTICATION_PERFORM_RESPONSE");
+                connect();
+            }
+        });
+        addMessageHandler(Message.REMOTE_DRIVE_CONNECT_REQUEST, new IMessageHandler() {
+            @Override
+            public void onIntent(Intent intent) {
+                Log.d(LOG_TAG, "REMOTE_DRIVE_CONNECT_REQUEST");
+                connect();
+            }
+        });
+
+        addMessageHandler(Message.REMOTE_DRIVE_SETUP_CONFIGURATION_REQUEST, new IMessageHandler() {
+            @Override
+            public void onIntent(Intent intent) {
+                Log.d(LOG_TAG, "REMOTE_DRIVE_SETUP_CONFIGURATION_REQUEST");
+                setupConfiguration(intent);
+            }
+        });
+
+        mConfigurationServiceProxy = new ConfigurationServiceProxy(this,
+                new ConfigurationServiceProxy.GetConfigurationListener() {
+                    @Override
+                    public void onGetConfiguration(String folderName, int syncTime) {
+                        Log.d(LOG_TAG, "onGetConfiguration");
+                        mSyncPeriod = syncTime;
+                        mFolderName = folderName;
+                    }
+                },
+                new ConfigurationServiceProxy.UpdateConfigurationListener() {
+                    @Override
+                    public void onUpdateConfiguration(String folderName, int syncTime) {
+                        Log.d(LOG_TAG, "onUpdateConfiguration");
+                    }
+                },
+                new ConfigurationServiceProxy.CacheCleanCacheListener() {
+                    @Override
+                    public void onCacheClean() {
+                        Log.d(LOG_TAG, "onCacheClean");
+                    }
+                });
+
+        mConfigurationServiceProxy.bind();
+        mConfigurationServiceProxy.getConfiguration();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(LOG_TAG, "onDestroy");
-        mGoogleApiClient.disconnect();
+        mConfigurationServiceProxy.unBind();
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(LOG_TAG, "onStartCommand");
+    /* Business logic */
+    private GoogleApiClient mGoogleApiClient;
 
-        if (intent == null) {
-            return super.onStartCommand(intent, flags, startId);
-        }
-
-        String command_name = intent.getStringExtra(COMMAND_PARAMETER_NAME);
-
-        if (command_name != null) {
-            switch (command_name) {
-                case COMMAND_CONNECT:
-                    connect();
-                    break;
-                default:
-                    Log.e(LOG_TAG, "onStartCommand: unknown command " + command_name);
-                    break;
-            }
-        } else {
-            Log.e(LOG_TAG, "onStartCommand: unable to get command");
-        }
-
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    public void connect() {
+    private void connect() {
         Log.d(LOG_TAG, "connect");
 
         if (mGoogleApiClient != null) {
@@ -115,23 +114,20 @@ public class GoogleDriveService extends Service {
                         @Override
                         public void onConnected(Bundle bundle) {
                             Log.d(LOG_TAG, "onConnected");
-                            sendBroadcast(createNotificationIntend(GOOGLE_DRIVE_CONNECTED));
-                            loadFileMetagata();
+                            onConnectionEstablished();
                         }
 
                         @Override
                         public void onConnectionSuspended(int i) {
                             Log.d(LOG_TAG, "onConnectionSuspended");
-                            sendBroadcast(createNotificationIntend(GOOGLE_DRIVE_DISCONNECTED));
+                            onConnectionLost();
                         }
                     })
                     .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                         @Override
                         public void onConnectionFailed(ConnectionResult connectionResult) {
-                            Log.e(LOG_TAG, "onConnectionFailed:" + connectionResult.toString());
-                            Intent intent = createNotificationIntend(AUTHENTICATION_PERFORM_REQUEST)
-                                    .putExtra(getResources().getString(R.string.on_drive_connection_failed_data), connectionResult);
-                            sendBroadcast(intent);
+                            Log.e(LOG_TAG, "onConnectionFailed");
+                            onConnectingFailed(connectionResult);
                         }
                     })
                     .build();
@@ -140,6 +136,23 @@ public class GoogleDriveService extends Service {
         }
     }
 
+    private void onConnectionEstablished() {
+        Log.d(LOG_TAG, "onConnectionEstablished");
+        sendMessage(createMessage(Message.REMOTE_DRIVE_CONNECT_RESPONSE));
+        loadFileMetagata();
+    }
+
+    private void onConnectionLost() {
+        Log.d(LOG_TAG, "onConnectionLost");
+        sendMessage(createMessage(Message.REMOTE_DRIVE_DISCONNECT_NOTIFICATION));
+    }
+
+    private void onConnectingFailed(ConnectionResult connectionResult) {
+        Log.e(LOG_TAG, "onConnectingFailed");
+        sendMessage(createMessage(Message.AUTHENTICATION_PERFORM_REQUEST)
+                .putExtra(ConnectionResult.class.toString(),
+                        connectionResult));
+    }
 
     void loadFileMetagata() {
         Log.d(LOG_TAG, "loadFileMetagata");
@@ -200,7 +213,20 @@ public class GoogleDriveService extends Service {
         });
     }
 
-    private Intent createNotificationIntend(int messageType) {
-        return new Intent(getResources().getString(R.string.drive_intend_notification)).putExtra(getResources().getString(R.string.drive_intend_message_type), messageType);
+    private void setupConfiguration(Intent intent) {
+        Log.d(LOG_TAG, "setupConfiguration");
+
+        ConfigurationService.Configuration configuration = (ConfigurationService.Configuration) intent
+                .getSerializableExtra(ConfigurationService
+                        .Configuration
+                        .class
+                        .getName());
+        mSyncPeriod = configuration.getSyncPeriod();
+        mFolderName = configuration.getFolderName();
+
+        Log.d(LOG_TAG, "setupConfiguration : configuration was updated:" + mFolderName + mSyncPeriod);
+
+        sendMessage(createMessage(Message.GET_CONFIGURATION_RESPONSE));
+
     }
 }

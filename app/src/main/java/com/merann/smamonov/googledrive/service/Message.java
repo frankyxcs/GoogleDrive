@@ -1,0 +1,25 @@
+package com.merann.smamonov.googledrive.service;
+
+/**
+ * Created by samam_000 on 05.12.2015.
+ */
+public enum  Message {
+        /* configuration messages */
+        GET_CONFIGURATION_REQUEST,
+        GET_CONFIGURATION_RESPONSE,
+        UPDATE_CONFIGURATION_REQUEST,
+        UPDATE_CONFIGURATION_RESPONSE,
+
+        /* drive commands */
+        REMOTE_DRIVE_SETUP_CONFIGURATION_REQUEST,
+        REMOTE_DRIVE_SETUP_CONFIGURATION_RESPONSE,
+        AUTHENTICATION_PERFORM_REQUEST,
+        AUTHENTICATION_PERFORM_RESPONSE,
+        REMOTE_DRIVE_CONNECT_REQUEST,
+        REMOTE_DRIVE_CONNECT_RESPONSE,
+        REMOTE_DRIVE_CONNECT_NOTIFICATION,
+        REMOTE_DRIVE_DISCONNECT_NOTIFICATION,
+
+        /* undefined command */
+        UNDEFINED_COMMAND
+}

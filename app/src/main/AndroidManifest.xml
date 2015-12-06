@@ -20,10 +20,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service android:name=".service.GoogleDriveService" />
-
         <activity android:name=".view.SettingsActivity"></activity>
+
+        <service android:name=".service.DriveService">
+            <intent-filter>
+                <action android:name="com.merann.smamonov.googledrive.DriveService" />
+            </intent-filter>
+        </service>
+
+        <service android:name=".service.ConfigurationService">
+            <intent-filter>
+                <action android:name="com.merann.smamonov.googledrive.ConfigurationService" />
+            </intent-filter>
+        </service>
+
     </application>
 
 </manifest>
