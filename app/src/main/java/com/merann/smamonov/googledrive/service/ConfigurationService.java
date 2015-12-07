@@ -46,10 +46,8 @@ public class ConfigurationService extends BaseService {
     static private String PREFERENCE_DEFAULT_FOLDER_NAME = "Sergey";
     static private String PREFERENCE_SYNC_PERIOD = "PREFERENCE_SYNC_PERIOD";
 
-    private Configuration mCurrentConfiguration;
-
     public ConfigurationService() {
-        super(LOG_TAG ,INTEND_STRING);
+        super(LOG_TAG, INTEND_STRING);
         Log.d(LOG_TAG, "ConfigurationService");
     }
 
@@ -95,27 +93,16 @@ public class ConfigurationService extends BaseService {
 
     public Configuration getConfiguration() {
         Log.d(LOG_TAG, "getConfiguration");
-        if (mCurrentConfiguration == null) {
-            readConfiguration();
-        }
-        return mCurrentConfiguration;
+        return readConfiguration();
     }
 
     public void updateConfiguration(Configuration configuration) {
         Log.d(LOG_TAG, "updateConfiguration");
-        mCurrentConfiguration = configuration;
-        saveConfiguration();
-    }
-
-    public void saveConfiguration() {
-        Log.d(LOG_TAG, "saveConfiguration");
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor preferecesEditor = preferences.edit();
-
-        preferecesEditor.putString(PREFERENCE_FOLDER_NAME, mCurrentConfiguration.getFolderName());
-
-        preferecesEditor.putInt(PREFERENCE_SYNC_PERIOD, mCurrentConfiguration.getSyncPeriod());
-        preferecesEditor.commit();
+        SharedPreferences.Editor edit = preferences.edit();
+        edit.putString(PREFERENCE_FOLDER_NAME, configuration.getFolderName());
+        edit.putInt(PREFERENCE_SYNC_PERIOD, configuration.getSyncPeriod());
+        edit.commit();
     }
 
     private Configuration readConfiguration() {
@@ -126,8 +113,7 @@ public class ConfigurationService extends BaseService {
         final int[] periods = getBaseContext().getResources().getIntArray(R.array.sync_periods);
         int period = preferences.getInt(PREFERENCE_SYNC_PERIOD, periods[0]);
 
-        mCurrentConfiguration = new Configuration(folderName, period);
-        return mCurrentConfiguration;
+        return new Configuration(folderName, period);
     }
 
     @Override

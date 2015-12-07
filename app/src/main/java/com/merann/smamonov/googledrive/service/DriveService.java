@@ -6,14 +6,7 @@ import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.Drive;
-import com.google.android.gms.drive.DriveApi;
-import com.google.android.gms.drive.DriveFolder;
-import com.google.android.gms.drive.Metadata;
-import com.google.android.gms.drive.MetadataBuffer;
-import com.google.android.gms.drive.MetadataChangeSet;
 
 /**
  * Created by samam_000 on 06.12.2015.
@@ -113,7 +106,7 @@ public class DriveService extends BaseService {
     private void onConnectionEstablished() {
         Log.d(LOG_TAG, "onConnectionEstablished");
         sendMessage(createMessage(Message.REMOTE_DRIVE_CONNECT_RESPONSE));
-        loadFileMetagata();
+        DriveServiceData.getInstance().getFilesAsync();
     }
 
     private void onConnectionLost() {
@@ -128,66 +121,6 @@ public class DriveService extends BaseService {
                         connectionResult));
     }
 
-    void loadFileMetagata() {
-        Log.d(LOG_TAG, "loadFileMetagata");
-        DriveFolder driveFolder = Drive.DriveApi.getRootFolder(DriveServiceData.getInstance().getGoogleApiClient());
-        Log.d(LOG_TAG, "Root folder is " + driveFolder.getDriveId());
-
-//        MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
-//                .setTitle("My_test_folder")
-//                .build();
-//
-//        driveFolder.createFolder(mGoogleApiClient, changeSet).setResultCallback(new ResultCallback<DriveFolder.DriveFolderResult>() {
-//            @Override
-//            public void onResult(DriveFolder.DriveFolderResult driveFolderResult) {
-//                Log.d(LOG_TAG, "loadFileMetagata::oncreateFolderResult");
-//                DriveFolder driveFolder1 = driveFolderResult.getDriveFolder();
-//                Log.d(LOG_TAG, "new folder is created:" + driveFolder1.getDriveId());
-//            }
-//        });
-
-        final PendingResult<DriveApi.MetadataBufferResult> result = driveFolder.listChildren(DriveServiceData.getInstance().getGoogleApiClient());
-        result.setResultCallback(new ResultCallback<DriveApi.MetadataBufferResult>() {
-            @Override
-            public void onResult(DriveApi.MetadataBufferResult metadataBufferResult) {
-                Log.d(LOG_TAG, "loadFileMetagata::onResult: ");
-
-                MetadataBuffer metadataBuffer = metadataBufferResult.getMetadataBuffer();
-
-                for (int index = 0;
-                     index < metadataBuffer.getCount();
-                     index++) {
-                    Metadata metadata = metadataBuffer.get(index);
-                    Log.d(LOG_TAG, "loadFileMetagata::onSuccess: " + index + ": " + metadata.getTitle());
-                    DriveServiceData.getInstance().getFiles().add(metadata);
-                }
-            }
-        });
-    }
-
-    void createFolder(DriveFolder rootFolder, final String newFolderName) {
-        Log.d(LOG_TAG, "createFolder newFolderName:" + newFolderName);
-
-        MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
-                .setTitle(newFolderName)
-                .build();
-
-        rootFolder.createFolder(DriveServiceData.getInstance().getGoogleApiClient(), changeSet)
-                .setResultCallback(new ResultCallback<DriveFolder.DriveFolderResult>() {
-            @Override
-            public void onResult(DriveFolder.DriveFolderResult driveFolderResult) {
-                Log.d(LOG_TAG, "createFolder::onResult");
-                DriveFolder driveFolder = driveFolderResult.getDriveFolder();
-
-                if (driveFolder != null) {
-                    Log.d(LOG_TAG, "created folder id:" + driveFolder.getDriveId());
-                } else {
-                    Log.d(LOG_TAG, "unable to create folder " + newFolderName);
-                }
-            }
-        });
-    }
-
     private void setupConfiguration(Intent intent) {
         Log.d(LOG_TAG, "setupConfiguration");
 
@@ -196,7 +129,6 @@ public class DriveService extends BaseService {
                         .Configuration
                         .class
                         .getName()));
-
 
         Log.d(LOG_TAG, "setupConfiguration : configuration was updated: "
                 + DriveServiceData.getInstance().getCurrentConfiguration().getFolderName()
