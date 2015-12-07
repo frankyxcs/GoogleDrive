@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
-import com.merann.smamonov.googledrive.R;
 
 import java.util.HashMap;
 
@@ -16,17 +15,17 @@ public abstract class MessageReceiver implements IMessageReceiver {
 
     protected Context mContext;
     private BroadcastReceiver mBroadcastReceiver;
-    private String LOG_TAG;
+    private String mLogTag;
     private String mIntentString;
 
     HashMap<Message, IMessageHandler> mCommandHandlers = new HashMap();
 
     public MessageReceiver(Context context, final String logTag, final String intentString)
     {
-        this.LOG_TAG = logTag;
+        this.mLogTag = logTag;
         mContext = context;
         mIntentString = intentString;
-        Log.d(LOG_TAG, "MessageListener");
+        Log.d(mLogTag, "MessageListener");
     }
 
     @Override
@@ -35,13 +34,13 @@ public abstract class MessageReceiver implements IMessageReceiver {
         mBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.d(LOG_TAG, "onReceive");
+                Log.d(mLogTag, "onReceive");
                 dispatchMessage(intent);
             }
         };
 
 
-        Log.d(LOG_TAG, "bind mIntentString:" + mIntentString);
+        Log.d(mLogTag, "bind mIntentString:" + mIntentString);
         IntentFilter onDriveNotificationIntendFilter = new IntentFilter(mIntentString);
         mContext.registerReceiver(mBroadcastReceiver, onDriveNotificationIntendFilter);
     }
@@ -54,13 +53,13 @@ public abstract class MessageReceiver implements IMessageReceiver {
 
     @Override
     public void addMessageHandler(Message messageId, IMessageHandler handler) {
-        Log.d(LOG_TAG, "addHandler: messageId[" + messageId + "]");
+        //Log.d(mLogTag, "addHandler: messageId" + messageId);
         mCommandHandlers.put(messageId, handler);
     }
 
     @Override
     public void dispatchMessage(Intent intent) {
-        Log.d(LOG_TAG, "dispatchIntent");
+        Log.d(mLogTag, "dispatchIntent");
 
         if (intent != null) {
             Message messageId = (Message)intent.getSerializableExtra(Message.class.getName());
@@ -79,7 +78,7 @@ public abstract class MessageReceiver implements IMessageReceiver {
 
     @Override
     public Intent createMessage(Message messageId) {
-        Log.d(LOG_TAG, "createMessage:" + mIntentString);
+        Log.d(mLogTag, "createMessage:" + mIntentString);
         return new Intent(getIntendString())
                 .putExtra(Message.class.getName(), messageId);
     }

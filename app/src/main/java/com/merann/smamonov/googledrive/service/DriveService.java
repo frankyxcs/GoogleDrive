@@ -25,13 +25,12 @@ public class DriveService extends BaseService {
 
     static public final String INTEND_STRING = "com.merann.smamonov.googledrive.DriveService";
     static private final String LOG_TAG = "DriveService";
-    private List<Metadata> mFiles = new ArrayList<>();
-    String mFolderName;
-    int mSyncPeriod;
+    ConfigurationServiceProxy mConfigurationServiceProxy;
 
     public DriveService() {
-        super(INTEND_STRING);
+        super(LOG_TAG, INTEND_STRING);
         Log.d(LOG_TAG, "DriveService");
+        isConnectionRequested = false;
     }
 
     @Override
@@ -39,10 +38,10 @@ public class DriveService extends BaseService {
         super.onCreate();
         Log.d(LOG_TAG, "onCreate");
 
-        addMessageHandler(Message.AUTHENTICATION_PERFORM_RESPONSE, new IMessageHandler() {
+        addMessageHandler(Message.REMOTE_DRIVE_AUTHENTICATION_PERFORM_RESPONSE, new IMessageHandler() {
             @Override
             public void onIntent(Intent intent) {
-                Log.d(LOG_TAG, "AUTHENTICATION_PERFORM_RESPONSE");
+                Log.d(LOG_TAG, "REMOTE_DRIVE_AUTHENTICATION_PERFORM_RESPONSE");
                 connect();
             }
         });
@@ -54,55 +53,36 @@ public class DriveService extends BaseService {
             }
         });
 
-        addMessageHandler(Message.REMOTE_DRIVE_SETUP_CONFIGURATION_REQUEST, new IMessageHandler() {
+        addMessageHandler(Message.REMOTE_DRIVE_CONFIGURATION_UPDATE_NOTIFICATION, new IMessageHandler() {
             @Override
             public void onIntent(Intent intent) {
-                Log.d(LOG_TAG, "REMOTE_DRIVE_SETUP_CONFIGURATION_REQUEST");
+                Log.d(LOG_TAG, "REMOTE_DRIVE_CONFIGURATION_UPDATE_NOTIFICATION");
                 setupConfiguration(intent);
             }
         });
-
-        mConfigurationServiceProxy = new ConfigurationServiceProxy(this,
-                new ConfigurationServiceProxy.GetConfigurationListener() {
-                    @Override
-                    public void onGetConfiguration(String folderName, int syncTime) {
-                        Log.d(LOG_TAG, "onGetConfiguration");
-                        mSyncPeriod = syncTime;
-                        mFolderName = folderName;
-                    }
-                },
-                new ConfigurationServiceProxy.UpdateConfigurationListener() {
-                    @Override
-                    public void onUpdateConfiguration(String folderName, int syncTime) {
-                        Log.d(LOG_TAG, "onUpdateConfiguration");
-                    }
-                },
-                new ConfigurationServiceProxy.CacheCleanCacheListener() {
-                    @Override
-                    public void onCacheClean() {
-                        Log.d(LOG_TAG, "onCacheClean");
-                    }
-                });
-
-        mConfigurationServiceProxy.bind();
-        mConfigurationServiceProxy.getConfiguration();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mConfigurationServiceProxy.unBind();
     }
 
     /* Business logic */
     private GoogleApiClient mGoogleApiClient;
+    ConfigurationService.Configuration mCurrentConfiguration;
+    private List<Metadata> mFiles = new ArrayList<>();
+    boolean isConnectionRequested;
 
     private void connect() {
         Log.d(LOG_TAG, "connect");
 
-        if (mGoogleApiClient != null) {
-
-            Log.d(LOG_TAG, "connect mGoogleApiClient exists");
+        if (mCurrentConfiguration == null)
+        {
+            Log.d(LOG_TAG, "Connection requested while we have no configuration");
+            isConnectionRequested = true;
+            getConfiguration();
+        }
+        else if (mGoogleApiClient != null) {
             Log.d(LOG_TAG, "connect isConnecting:" + mGoogleApiClient.isConnecting() + " isConnected:" + mGoogleApiClient.isConnected());
             mGoogleApiClient.connect();
         } else {
@@ -149,7 +129,7 @@ public class DriveService extends BaseService {
 
     private void onConnectingFailed(ConnectionResult connectionResult) {
         Log.e(LOG_TAG, "onConnectingFailed");
-        sendMessage(createMessage(Message.AUTHENTICATION_PERFORM_REQUEST)
+        sendMessage(createMessage(Message.REMOTE_DRIVE_AUTHENTICATION_PERFORM_REQUEST)
                 .putExtra(ConnectionResult.class.toString(),
                         connectionResult));
     }
@@ -216,17 +196,24 @@ public class DriveService extends BaseService {
     private void setupConfiguration(Intent intent) {
         Log.d(LOG_TAG, "setupConfiguration");
 
-        ConfigurationService.Configuration configuration = (ConfigurationService.Configuration) intent
+        mCurrentConfiguration = (ConfigurationService.Configuration) intent
                 .getSerializableExtra(ConfigurationService
                         .Configuration
                         .class
                         .getName());
-        mSyncPeriod = configuration.getSyncPeriod();
-        mFolderName = configuration.getFolderName();
 
-        Log.d(LOG_TAG, "setupConfiguration : configuration was updated:" + mFolderName + mSyncPeriod);
 
-        sendMessage(createMessage(Message.GET_CONFIGURATION_RESPONSE));
+        Log.d(LOG_TAG, "setupConfiguration : configuration was updated: " + mCurrentConfiguration.getFolderName() + mCurrentConfiguration.getSyncPeriod());
 
+        if (isConnectionRequested)
+        {
+            connect();
+        }
+    }
+
+    private void getConfiguration()
+    {
+        mConfigurationServiceProxy = new ConfigurationServiceProxy(this, null, null, null);
+        mConfigurationServiceProxy.getConfiguration();
     }
 }

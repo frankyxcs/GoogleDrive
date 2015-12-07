@@ -48,9 +48,8 @@ public class ConfigurationService extends BaseService {
 
     private Configuration mCurrentConfiguration;
 
-    public ConfigurationService()
-    {
-        super(INTEND_STRING);
+    public ConfigurationService() {
+        super(LOG_TAG ,INTEND_STRING);
         Log.d(LOG_TAG, "ConfigurationService");
     }
 
@@ -68,6 +67,10 @@ public class ConfigurationService extends BaseService {
                         .putExtra(ConfigurationService.Configuration.class.getName(),
                                 configuration));
 
+                /* notify Drive Service */
+                DriveServiceProxy driveServiceProxy = new DriveServiceProxy(getBaseContext(), null);
+                driveServiceProxy.handleConfigurationUpdate(configuration);
+
             }
         });
 
@@ -77,6 +80,12 @@ public class ConfigurationService extends BaseService {
                 Log.d(LOG_TAG, "UPDATE_CONFIGURATION_REQUEST");
                 Configuration configuration = (Configuration) intent.getSerializableExtra(Configuration.class.getName());
                 updateConfiguration(configuration);
+
+                /* notify Drive Service */
+                DriveServiceProxy driveServiceProxy = new DriveServiceProxy(getBaseContext(), null);
+                driveServiceProxy.handleConfigurationUpdate(configuration);
+
+                /* notify client */
                 sendMessage(createMessage(Message.UPDATE_CONFIGURATION_RESPONSE)
                         .putExtra(ConfigurationService.Configuration.class.getName(),
                                 configuration));
@@ -119,5 +128,11 @@ public class ConfigurationService extends BaseService {
 
         mCurrentConfiguration = new Configuration(folderName, period);
         return mCurrentConfiguration;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(LOG_TAG, "onDestroy");
     }
 }

@@ -13,11 +13,12 @@ import android.view.View;
 
 import com.merann.smamonov.googledrive.R;
 import com.merann.smamonov.googledrive.service.DriveServiceProxy;
+import com.merann.smamonov.googledrive.service.DriveServiceProxyForActivity;
 
 public class HomeActivity extends AppCompatActivity {
 
     public final String LOG_TAG = "HomeActivity";
-    DriveServiceProxy mDriveServiceProxy;
+    DriveServiceProxyForActivity mDriveServiceProxy;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +38,7 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
-        mDriveServiceProxy = new DriveServiceProxy(this, new DriveServiceProxy.OnConnectionStateChangeListener() {
+        mDriveServiceProxy = new DriveServiceProxyForActivity(this, new DriveServiceProxy.OnConnectionStateChangeListener() {
             @Override
             public void onConnectionStateChange(boolean isConneted) {
                 onServiceConnected(isConneted);

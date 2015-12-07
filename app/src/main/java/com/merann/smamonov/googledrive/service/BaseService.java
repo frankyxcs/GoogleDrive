@@ -8,45 +8,46 @@ import android.util.Log;
  */
 public class BaseService extends IntentService implements IMessageReceiver, IMessageSender {
 
-    static private final String LOG_TAG = "BaseService";
+    static private String mLogTag;
 
     ServiceMessageHandler mServiceMessageHandler;
 
-    public BaseService(String intentString) {
-        super(LOG_TAG);
-        mServiceMessageHandler = new ServiceMessageHandler(this, LOG_TAG, intentString);
-        Log.d(LOG_TAG, "BaseService");
+    public BaseService(String logTag, String intentString) {
+        super(mLogTag);
+        this.mLogTag = logTag;
+        mServiceMessageHandler = new ServiceMessageHandler(this, mLogTag, intentString);
+        Log.d(mLogTag, "BaseService");
     }
 
     @Override
     public void onCreate() {
-        Log.d(LOG_TAG, "onCreate");
+        Log.d(mLogTag, "onCreate");
         super.onCreate();
         bind();
     }
 
     @Override
     public void onDestroy() {
-        Log.d(LOG_TAG, "onDestroy");
+        Log.d(mLogTag, "onDestroy");
         super.onDestroy();
         unBind();
     }
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.d(LOG_TAG, "onHandleIntent");
+        Log.d(mLogTag, "onHandleIntent");
         mServiceMessageHandler.dispatchMessage(intent);
     }
 
     @Override
     public void bind() {
-        Log.d(LOG_TAG, "bind");
+        Log.d(mLogTag, "bind");
         mServiceMessageHandler.bind();
     }
 
     @Override
     public void unBind() {
-        Log.d(LOG_TAG, "unBind");
+        Log.d(mLogTag, "unBind");
         mServiceMessageHandler.unBind();
     }
 
@@ -57,19 +58,18 @@ public class BaseService extends IntentService implements IMessageReceiver, IMes
 
     @Override
     public Intent createMessage(Message messageId) {
-        Log.d(LOG_TAG, "createMessage");
+        Log.d(mLogTag, "createMessage");
         return mServiceMessageHandler.createMessage(messageId);
     }
 
     @Override
     public void sendMessage(Intent intent) {
-        Log.d(LOG_TAG, "sendMessage");
         mServiceMessageHandler.sendMessage(intent);
     }
 
     @Override
     public void dispatchMessage(Intent intent) {
-        Log.d(LOG_TAG, "dispatchMessage");
+        Log.d(mLogTag, "dispatchMessage");
         mServiceMessageHandler.sendMessage(intent);
     }
 }

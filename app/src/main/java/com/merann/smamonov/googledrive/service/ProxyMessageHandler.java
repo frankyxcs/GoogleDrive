@@ -9,17 +9,17 @@ import android.util.Log;
  */
 public abstract class ProxyMessageHandler extends MessageReceiver implements IMessageSender {
 
-    static private String LOG_TAG;
+    static private String mLogTag;
 
     public ProxyMessageHandler(Context context, final String logTag, final String intentString) {
         super(context, logTag, intentString);
-        this.LOG_TAG = logTag;
-        Log.d(LOG_TAG, "ProxyMessageHandler");
+        this.mLogTag = logTag;
+        Log.d(mLogTag, "ProxyMessageHandler");
     }
 
     @Override
     public void sendMessage(Intent intent) {
-        Log.d(LOG_TAG, "sendMessage");
+        Log.d(mLogTag, "sendMessage: " + intent.getSerializableExtra(Message.class.getName()));
         mContext.startService(intent);
     }
 }
