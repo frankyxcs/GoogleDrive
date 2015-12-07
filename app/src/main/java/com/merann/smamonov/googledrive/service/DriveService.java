@@ -15,9 +15,6 @@ import com.google.android.gms.drive.Metadata;
 import com.google.android.gms.drive.MetadataBuffer;
 import com.google.android.gms.drive.MetadataChangeSet;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by samam_000 on 06.12.2015.
  */
@@ -25,12 +22,10 @@ public class DriveService extends BaseService {
 
     static public final String INTEND_STRING = "com.merann.smamonov.googledrive.DriveService";
     static private final String LOG_TAG = "DriveService";
-    ConfigurationServiceProxy mConfigurationServiceProxy;
 
     public DriveService() {
         super(LOG_TAG, INTEND_STRING);
         Log.d(LOG_TAG, "DriveService");
-        isConnectionRequested = false;
     }
 
     @Override
@@ -68,26 +63,25 @@ public class DriveService extends BaseService {
     }
 
     /* Business logic */
-    private GoogleApiClient mGoogleApiClient;
-    ConfigurationService.Configuration mCurrentConfiguration;
-    private List<Metadata> mFiles = new ArrayList<>();
-    boolean isConnectionRequested;
+
 
     private void connect() {
         Log.d(LOG_TAG, "connect");
 
-        if (mCurrentConfiguration == null)
-        {
+        if (DriveServiceData.getInstance().getCurrentConfiguration() == null) {
             Log.d(LOG_TAG, "Connection requested while we have no configuration");
-            isConnectionRequested = true;
+            DriveServiceData.getInstance().setIsConnectionRequested(true);
             getConfiguration();
-        }
-        else if (mGoogleApiClient != null) {
-            Log.d(LOG_TAG, "connect isConnecting:" + mGoogleApiClient.isConnecting() + " isConnected:" + mGoogleApiClient.isConnected());
-            mGoogleApiClient.connect();
+        } else if (DriveServiceData.getInstance().getGoogleApiClient() != null) {
+            Log.d(LOG_TAG, "connect isConnecting:"
+                    + DriveServiceData.getInstance().getGoogleApiClient().isConnecting()
+                    + " isConnected:"
+                    + DriveServiceData.getInstance().getGoogleApiClient().isConnected());
+
+            DriveServiceData.getInstance().getGoogleApiClient().connect();
         } else {
             Log.d(LOG_TAG, "connect mGoogleApiClient doesn't exists");
-            mGoogleApiClient = new GoogleApiClient.Builder(this)
+            DriveServiceData.getInstance().setGoogleApiClient(new GoogleApiClient.Builder(this)
                     .addApi(Drive.API)
                     .addScope(Drive.SCOPE_FILE)
                     .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
@@ -110,9 +104,9 @@ public class DriveService extends BaseService {
                             onConnectingFailed(connectionResult);
                         }
                     })
-                    .build();
+                    .build());
             Log.d(LOG_TAG, "connect mGoogleApiClient.connect()");
-            mGoogleApiClient.connect();
+            DriveServiceData.getInstance().getGoogleApiClient().connect();
         }
     }
 
@@ -136,7 +130,7 @@ public class DriveService extends BaseService {
 
     void loadFileMetagata() {
         Log.d(LOG_TAG, "loadFileMetagata");
-        DriveFolder driveFolder = Drive.DriveApi.getRootFolder(mGoogleApiClient);
+        DriveFolder driveFolder = Drive.DriveApi.getRootFolder(DriveServiceData.getInstance().getGoogleApiClient());
         Log.d(LOG_TAG, "Root folder is " + driveFolder.getDriveId());
 
 //        MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
@@ -152,7 +146,7 @@ public class DriveService extends BaseService {
 //            }
 //        });
 
-        final PendingResult<DriveApi.MetadataBufferResult> result = driveFolder.listChildren(mGoogleApiClient);
+        final PendingResult<DriveApi.MetadataBufferResult> result = driveFolder.listChildren(DriveServiceData.getInstance().getGoogleApiClient());
         result.setResultCallback(new ResultCallback<DriveApi.MetadataBufferResult>() {
             @Override
             public void onResult(DriveApi.MetadataBufferResult metadataBufferResult) {
@@ -165,7 +159,7 @@ public class DriveService extends BaseService {
                      index++) {
                     Metadata metadata = metadataBuffer.get(index);
                     Log.d(LOG_TAG, "loadFileMetagata::onSuccess: " + index + ": " + metadata.getTitle());
-                    mFiles.add(metadata);
+                    DriveServiceData.getInstance().getFiles().add(metadata);
                 }
             }
         });
@@ -178,7 +172,8 @@ public class DriveService extends BaseService {
                 .setTitle(newFolderName)
                 .build();
 
-        rootFolder.createFolder(mGoogleApiClient, changeSet).setResultCallback(new ResultCallback<DriveFolder.DriveFolderResult>() {
+        rootFolder.createFolder(DriveServiceData.getInstance().getGoogleApiClient(), changeSet)
+                .setResultCallback(new ResultCallback<DriveFolder.DriveFolderResult>() {
             @Override
             public void onResult(DriveFolder.DriveFolderResult driveFolderResult) {
                 Log.d(LOG_TAG, "createFolder::onResult");
@@ -196,24 +191,24 @@ public class DriveService extends BaseService {
     private void setupConfiguration(Intent intent) {
         Log.d(LOG_TAG, "setupConfiguration");
 
-        mCurrentConfiguration = (ConfigurationService.Configuration) intent
+        DriveServiceData.getInstance().setCurrentConfiguration((ConfigurationService.Configuration) intent
                 .getSerializableExtra(ConfigurationService
                         .Configuration
                         .class
-                        .getName());
+                        .getName()));
 
 
-        Log.d(LOG_TAG, "setupConfiguration : configuration was updated: " + mCurrentConfiguration.getFolderName() + mCurrentConfiguration.getSyncPeriod());
+        Log.d(LOG_TAG, "setupConfiguration : configuration was updated: "
+                + DriveServiceData.getInstance().getCurrentConfiguration().getFolderName()
+                + DriveServiceData.getInstance().getCurrentConfiguration().getSyncPeriod());
 
-        if (isConnectionRequested)
-        {
+        if (DriveServiceData.getInstance().isConnectionRequested()) {
             connect();
         }
     }
 
-    private void getConfiguration()
-    {
-        mConfigurationServiceProxy = new ConfigurationServiceProxy(this, null, null, null);
-        mConfigurationServiceProxy.getConfiguration();
+    private void getConfiguration() {
+        ConfigurationServiceProxy configurationServiceProxy = new ConfigurationServiceProxy(this, null, null, null);
+        configurationServiceProxy.getConfiguration();
     }
 }
