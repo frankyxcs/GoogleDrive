@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
 import java.io.InputStream;
 
 interface ImageLoaderListener {
@@ -40,7 +41,7 @@ public class ImageService {
     }
 
     public static void loadIconImage(final InputStream inputStream,
-                                      final ImageLoaderListener imageLoaderListener) {
+                                     final ImageLoaderListener imageLoaderListener) {
         Log.d(LOG_TAG, "loadIconImage");
         AsyncTask task = new AsyncTask<Void, Void, Void>() {
             Bitmap mResult;
@@ -84,20 +85,22 @@ public class ImageService {
     private static Bitmap loadIcon(InputStream inputStream) {
         Log.d(LOG_TAG, "loadIcon");
         Bitmap result = null;
+
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
 
         BitmapFactory.decodeStream(inputStream, null, options);
         options.inSampleSize = calculateInSampleSize(options, 60, 60);
         options.inJustDecodeBounds = false;
-
         try {
-            result = BitmapFactory.decodeStream(inputStream, null, options);
-            Log.d(LOG_TAG, "loadIcon: image icon was loaded, size:" + result.getByteCount());
-
+           // inputStream.reset();
+            result = BitmapFactory.decodeStream(inputStream);
         } catch (Throwable throwable) {
             Log.d(LOG_TAG, "loadIcon: unable to load file icon");
         }
+
+        Log.d(LOG_TAG, "loadIcon: image icon was loaded, size:" + result.getByteCount());
+
         return result;
     }
 

@@ -23,6 +23,7 @@ import com.google.android.gms.drive.query.SearchableField;
 
 import org.apache.commons.io.IOUtils;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -35,11 +36,36 @@ import java.util.List;
  */
 public class DriveServiceData {
 
+    private class RemoteFileFile {
+        Metadata mMetadata;
+        Bitmap mBitmap;
+
+        public Metadata getMetadata() {
+            return mMetadata;
+        }
+
+        public void setMetadata(Metadata mMetadata) {
+            this.mMetadata = mMetadata;
+        }
+
+        public Bitmap getBitmap() {
+            return mBitmap;
+        }
+
+        public void setBitmap(Bitmap mBitmap) {
+            this.mBitmap = mBitmap;
+        }
+
+        public RemoteFileFile(Metadata metadata) {
+            this.mMetadata = metadata;
+        }
+    }
+
     private final static String LOG_TAG = "DriveServiceData";
 
     private GoogleApiClient mGoogleApiClient;
     ConfigurationService.Configuration mCurrentConfiguration;
-    private List<Metadata> mFiles = new ArrayList<>();
+    private List<RemoteFileFile> mFiles = new ArrayList<>();
     boolean mIsConnectionRequested;
     DriveFolder mDriveFolder;
 
@@ -66,10 +92,6 @@ public class DriveServiceData {
 
     public void setCurrentConfiguration(ConfigurationService.Configuration mCurrentConfiguration) {
         this.mCurrentConfiguration = mCurrentConfiguration;
-    }
-
-    public void setFiles(List<Metadata> mFiles) {
-        this.mFiles = mFiles;
     }
 
     public GoogleApiClient getGoogleApiClient() {
@@ -155,7 +177,7 @@ public class DriveServiceData {
                                  index++) {
                                 Metadata metadata = metadataBuffer.get(index);
                                 printFileInfo(metadata);
-                                mFiles.add(metadata);
+                                mFiles.add(new RemoteFileFile(metadata));
                             }
                         }
                         downloadFiles();
@@ -183,7 +205,7 @@ public class DriveServiceData {
                          index++) {
                         Metadata metadata = metadataBuffer.get(index);
                         printFileInfo(metadata);
-                        mFiles.add(metadata);
+                        mFiles.add(new RemoteFileFile(metadata));
                     }
                 }
             }
@@ -356,8 +378,7 @@ public class DriveServiceData {
                 });
     }
 
-    private void deleteUserFolder()
-    {
+    private void deleteUserFolder() {
         mDriveFolder.delete(mGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
             @Override
             public void onResult(Status status) {
@@ -366,42 +387,77 @@ public class DriveServiceData {
         });
     }
 
-    private void downloadFiles()
-    {
-        for (Metadata  metadata : mFiles) {
-            DriveId driveId = metadata.getDriveId();
-            DriveFile driveFile = driveId.asDriveFile();
-            downloadFile(driveFile);
+    private void downloadFiles() {
+        for (RemoteFileFile file : mFiles) {
+            downloadFile(file);
         }
     }
 
-    private void downloadFile(final DriveFile driveFile)
-    {
-        driveFile.open(mGoogleApiClient, DriveFile.MODE_READ_ONLY, new DriveFile.DownloadProgressListener() {
-            @Override
-            public void onProgress(long l, long l1) {
-
-            }
-        }).setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
+    private void downloadFile(final RemoteFileFile file) {
+        DriveId driveId = file.getMetadata().getDriveId();
+        DriveFile driveFile = driveId.asDriveFile();
+        final String title = file.getMetadata().getTitle();
+        driveFile.open(mGoogleApiClient,
+                DriveFile.MODE_READ_ONLY,
+                new DriveFile.DownloadProgressListener() {
+                    @Override
+                    public void onProgress(long l, long l1) {
+                        Log.d(LOG_TAG, "downloadFile::onProgress: "
+                                + title
+                                + " "
+                                + l +
+                                "/"
+                                + l1);
+                    }
+                }).setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
             @Override
             public void onResult(DriveApi.DriveContentsResult driveContentsResult) {
-                DriveContents driveContents = driveContentsResult.getDriveContents();
-                if (driveContents != null)
-                {
-                    InputStream inputStream = driveContents.getInputStream();
-                    ImageService.loadIconImage(inputStream, new ImageLoaderListener() {
-                        @Override
-                        public void onLoadComplete(Bitmap bitmap) {
-                            onImageLoaded(driveFile, bitmap);
+                Log.d(LOG_TAG, "downloadFile::onResult: " + title);
+
+                if (driveContentsResult.getStatus().isSuccess()) {
+
+                    Log.d(LOG_TAG, "downloadFile::onResult:"
+                            + driveContentsResult);
+
+                    DriveContents driveContents = driveContentsResult.getDriveContents();
+                    if (driveContents != null) {
+                        InputStream inputStream = driveContents.getInputStream();
+
+/*
+                        BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+
+                        Bitmap bitmap = BitmapFactory.decodeStream(bufferedInputStream);
+
+                        if (bitmap != null) {
+                            Log.e(LOG_TAG, "Bitmap was created" + bitmap.getByteCount());
                         }
-                    });
+                        else
+                        {
+                            Log.e(LOG_TAG, "Bitmap load was faild");
+                        }
+
+*/
+                        ImageService.loadIconImage(inputStream, new ImageLoaderListener() {
+                            @Override
+                            public void onLoadComplete(Bitmap bitmap) {
+                                onImageLoaded(file, bitmap);
+                            }
+                        });
+                    }
+                } else {
+                    Log.e(LOG_TAG, "downloadFile::onResult: unable to open file:"
+                            + file.getMetadata().getTitle());
                 }
             }
         });
     }
 
-    private void onImageLoaded(DriveFile driveFile, Bitmap bitmap)
-    {
-
+    private void onImageLoaded(final RemoteFileFile file,
+                               Bitmap bitmap) {
+        Log.d(LOG_TAG, "onImageLoaded:"
+                + file.getMetadata().getTitle()
+                + " size:"
+                + bitmap.getByteCount());
+        file.setBitmap(bitmap);
     }
 }
