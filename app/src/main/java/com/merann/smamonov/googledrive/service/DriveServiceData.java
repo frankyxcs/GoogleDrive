@@ -5,6 +5,7 @@ import android.util.Log;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveContents;
@@ -85,7 +86,7 @@ public class DriveServiceData {
     }
 
     void createFolderAsync(final String newFolderName) {
-        Log.d(LOG_TAG, "createFolder newFolderName:" + newFolderName);
+        Log.d(LOG_TAG, "createFolder new folder to be created:" + newFolderName);
 
         MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
                 .setTitle(newFolderName)
@@ -99,9 +100,10 @@ public class DriveServiceData {
                     @Override
                     public void onResult(DriveFolder.DriveFolderResult driveFolderResult) {
                         mDriveFolder = driveFolderResult.getDriveFolder();
-
                         if (mDriveFolder != null) {
-                            Log.d(LOG_TAG, "createFolder created folder:" + mDriveFolder.getDriveId());
+                            Log.d(LOG_TAG, "new user folder:" +
+                                    newFolderName
+                                    + " was created");
                             onFolderCreated();
                         }
                     }
@@ -125,6 +127,38 @@ public class DriveServiceData {
         }
     }
 
+    private void getImeageFiles(DriveFolder driveFolder) {
+        Log.d(LOG_TAG, "getImeageFiles");
+
+        Query query = new Query.Builder().addFilter(Filters.or(
+                Filters.eq(SearchableField.MIME_TYPE,
+                        "image/jpeg"),
+                Filters.eq(SearchableField.MIME_TYPE,
+                        "image/png")))
+                .build();
+        driveFolder.queryChildren(mGoogleApiClient, query)
+                .setResultCallback(new ResultCallback<DriveApi.MetadataBufferResult>() {
+                    @Override
+                    public void onResult(DriveApi.MetadataBufferResult metadataBufferResult) {
+                        Log.d(LOG_TAG, "getImeageFiles::onResult:");
+
+                        MetadataBuffer metadataBuffer = metadataBufferResult.getMetadataBuffer();
+
+                        if (metadataBuffer.getCount() == 0) {
+                            Log.d(LOG_TAG, "getImeageFiles::onResult: folder has no files");
+                        } else {
+                            for (int index = 0;
+                                 index < metadataBuffer.getCount();
+                                 index++) {
+                                Metadata metadata = metadataBuffer.get(index);
+                                printFileInfo(metadata);
+                                mFiles.add(metadata);
+                            }
+                        }
+                    }
+                });
+    }
+
     void loadFileMetagata(DriveFolder driveFolder) {
         Log.d(LOG_TAG, "loadFileMetagata");
 
@@ -144,18 +178,47 @@ public class DriveServiceData {
                          index < metadataBuffer.getCount();
                          index++) {
                         Metadata metadata = metadataBuffer.get(index);
-                        Log.d(LOG_TAG, "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-                        Log.d(LOG_TAG, "getTitle:" + metadata.getTitle());
-                        Log.d(LOG_TAG, "getDescription:" + metadata.getDescription());
-                        Log.d(LOG_TAG, "getMimeType:" + metadata.getMimeType());
-                        Log.d(LOG_TAG, "getWebContentLink:" + metadata.getWebContentLink());
-                        Log.d(LOG_TAG, "getFileSize:" + metadata.getFileSize());
+                        printFileInfo(metadata);
                         mFiles.add(metadata);
-                        Log.d(LOG_TAG, "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
                     }
                 }
             }
         });
+    }
+
+    private void printFileInfo(Metadata metadata) {
+        Log.d(LOG_TAG, "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        Log.d(LOG_TAG, "getAlternateLink:" + metadata.getAlternateLink());
+        Log.d(LOG_TAG, "getContentAvailability:" + metadata.getContentAvailability());
+        Log.d(LOG_TAG, "getCreatedDate:" + metadata.getCreatedDate());
+        Log.d(LOG_TAG, "getDescription:" + metadata.getDescription());
+        Log.d(LOG_TAG, "getDriveId:" + metadata.getDriveId());
+        Log.d(LOG_TAG, "getEmbedLink:" + metadata.getEmbedLink());
+        Log.d(LOG_TAG, "getFileExtension:" + metadata.getFileExtension());
+        Log.d(LOG_TAG, "getFileSize:" + metadata.getFileSize());
+        Log.d(LOG_TAG, "getLastViewedByMeDate:" + metadata.getLastViewedByMeDate());
+        Log.d(LOG_TAG, "getMimeType:" + metadata.getMimeType());
+        Log.d(LOG_TAG, "getModifiedByMeDate:" + metadata.getModifiedByMeDate());
+        Log.d(LOG_TAG, "getModifiedDate:" + metadata.getModifiedDate());
+        Log.d(LOG_TAG, "getOriginalFilename:" + metadata.getOriginalFilename());
+        Log.d(LOG_TAG, "getQuotaBytesUsed:" + metadata.getQuotaBytesUsed());
+        Log.d(LOG_TAG, "getSharedWithMeDate:" + metadata.getSharedWithMeDate());
+        Log.d(LOG_TAG, "getTitle:" + metadata.getTitle());
+        Log.d(LOG_TAG, "getWebContentLink:" + metadata.getWebContentLink());
+        Log.d(LOG_TAG, "getWebViewLink:" + metadata.getWebViewLink());
+        Log.d(LOG_TAG, "isEditable:" + metadata.isEditable());
+        Log.d(LOG_TAG, "isExplicitlyTrashed:" + metadata.isExplicitlyTrashed());
+        Log.d(LOG_TAG, "isFolder:" + metadata.isFolder());
+        Log.d(LOG_TAG, "isInAppFolder:" + metadata.isInAppFolder());
+        Log.d(LOG_TAG, "isPinnable:" + metadata.isPinnable());
+        Log.d(LOG_TAG, "isPinned:" + metadata.isPinned());
+        Log.d(LOG_TAG, "isRestricted:" + metadata.isRestricted());
+        Log.d(LOG_TAG, "isShared:" + metadata.isShared());
+        Log.d(LOG_TAG, "isStarred:" + metadata.isStarred());
+        Log.d(LOG_TAG, "isTrashable:" + metadata.isTrashable());
+        Log.d(LOG_TAG, "isTrashed:" + metadata.isTrashed());
+        Log.d(LOG_TAG, "isViewed:" + metadata.isViewed());
+        Log.d(LOG_TAG, "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     }
 
     public void getFilesAsync() {
@@ -173,11 +236,12 @@ public class DriveServiceData {
                 .setResultCallback(new ResultCallback<DriveApi.MetadataBufferResult>() {
                     @Override
                     public void onResult(DriveApi.MetadataBufferResult metadataBufferResult) {
-                        Log.d(LOG_TAG, "searchForUserFolder::onResult");
-
                         MetadataBuffer metadataBuffer = metadataBufferResult.getMetadataBuffer();
 
+                        Log.d(LOG_TAG, "searchForUserFolder::onResult: " + metadataBuffer.getCount() + " results");
+
                         if (metadataBuffer.getCount() == 0) {
+                            Log.d(LOG_TAG, "searchForUserFolder::onResult used folder doesn't exists");
                             createFolderAsync(mCurrentConfiguration
                                     .getFolderName());
                         } else {
@@ -186,31 +250,31 @@ public class DriveServiceData {
                                  index++) {
                                 Metadata metadata = metadataBuffer.get(index);
                                 if (metadata.isFolder()) {
-                                    Log.d(LOG_TAG, "searchForUserFolder::onSuccess: "
-                                            + index
-                                            + ": "
-                                            + metadata.getDriveId());
+
+                                    printFileInfo(metadata);
 
                                     mDriveFolder = metadata.getDriveId().asDriveFolder();
-                                    Log.d(LOG_TAG, "searchForUserFolder::onSuccess: "
-                                            + index
-                                            + ": "
-                                            + mDriveFolder.getDriveId());
-                                    break;
+                                    if (mDriveFolder != null) {
+                                        Log.d(LOG_TAG, "searchForUserFolder::onSuccess: "
+                                                + index
+                                                + ": "
+                                                + mDriveFolder.getDriveId());
+                                        onFolderExisted();
+                                        break;
+                                    }
                                 }
                             }
                         }
-                        onFolderExisted();
                     }
                 });
     }
 
     public void onFolderCreated() {
-        loadFileMetagata(mDriveFolder);
+        getImeageFiles(mDriveFolder);
     }
 
     public void onFolderExisted() {
-        loadFileMetagata(mDriveFolder);
+        getImeageFiles(mDriveFolder);
     }
 
     public void getFilesSync() {
@@ -246,6 +310,7 @@ public class DriveServiceData {
     }
 
     public void uploadFile(final File file) {
+
         final MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder()
                 .setTitle(file.getName())
                 .build();
@@ -265,6 +330,7 @@ public class DriveServiceData {
                         } catch (Throwable throwable) {
                             Log.d(LOG_TAG, "throwable: " + throwable.getMessage());
                         }
+                        //driveContents.commit();
 
                         mDriveFolder.createFile(mGoogleApiClient,
                                 metadataChangeSet,
@@ -284,5 +350,15 @@ public class DriveServiceData {
                                 );
                     }
                 });
+    }
+
+    private void deleteUserFolder()
+    {
+        mDriveFolder.delete(mGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
+            @Override
+            public void onResult(Status status) {
+                Log.d(LOG_TAG, "deleteUserFolder::onResult:" + status);
+            }
+        });
     }
 }
