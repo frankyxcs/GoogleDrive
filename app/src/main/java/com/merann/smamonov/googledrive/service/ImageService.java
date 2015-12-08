@@ -9,7 +9,6 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
 import java.io.InputStream;
 
 interface ImageLoaderListener {
@@ -48,7 +47,7 @@ public class ImageService {
 
             @Override
             protected Void doInBackground(Void... params) {
-                mResult = loadIcon(inputStream);
+                //mResult = loadIcon(inputStream);
                 return null;
             }
 
@@ -59,6 +58,14 @@ public class ImageService {
             }
         }.execute();
     }
+
+    public static void loadIconImageSync(final InputStream inputStream,
+                                         final ImageLoaderListener imageLoaderListener) {
+        Log.d(LOG_TAG, "loadIconImage");
+        //Bitmap result = loadIcon(inputStream);
+        //imageLoaderListener.onLoadComplete(result);
+    }
+
 
     private static int calculateInSampleSize(BitmapFactory.Options options,
                                              int width,
@@ -82,19 +89,24 @@ public class ImageService {
         return inSampleSize;
     }
 
-    private static Bitmap loadIcon(InputStream inputStream) {
+    public static BitmapFactory.Options getIconOptions(InputStream inputStream) {
+        BitmapFactory.Options result = new BitmapFactory.Options();
+        result.inJustDecodeBounds = true;
+
+        BitmapFactory.decodeStream(inputStream, null, result);
+        result.inSampleSize = calculateInSampleSize(result, 60, 60);
+        result.inJustDecodeBounds = false;
+
+        return result;
+    }
+
+
+    public static Bitmap loadIcon(InputStream inputStream, BitmapFactory.Options bitmapOptions) {
         Log.d(LOG_TAG, "loadIcon");
         Bitmap result = null;
 
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-
-        BitmapFactory.decodeStream(inputStream, null, options);
-        options.inSampleSize = calculateInSampleSize(options, 60, 60);
-        options.inJustDecodeBounds = false;
         try {
-           // inputStream.reset();
-            result = BitmapFactory.decodeStream(inputStream);
+            result = BitmapFactory.decodeStream(inputStream, null, bitmapOptions);
         } catch (Throwable throwable) {
             Log.d(LOG_TAG, "loadIcon: unable to load file icon");
         }

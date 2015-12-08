@@ -23,7 +23,6 @@ import com.google.android.gms.drive.query.SearchableField;
 
 import org.apache.commons.io.IOUtils;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -394,9 +393,11 @@ public class DriveServiceData {
     }
 
     private void downloadFile(final RemoteFileFile file) {
+
         DriveId driveId = file.getMetadata().getDriveId();
-        DriveFile driveFile = driveId.asDriveFile();
+        final DriveFile driveFile = driveId.asDriveFile();
         final String title = file.getMetadata().getTitle();
+
         driveFile.open(mGoogleApiClient,
                 DriveFile.MODE_READ_ONLY,
                 new DriveFile.DownloadProgressListener() {
@@ -422,35 +423,34 @@ public class DriveServiceData {
                     DriveContents driveContents = driveContentsResult.getDriveContents();
                     if (driveContents != null) {
                         InputStream inputStream = driveContents.getInputStream();
+                        final BitmapFactory.Options bitmabOptions = ImageService.getIconOptions(inputStream);
 
-/*
-                        BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-
-                        Bitmap bitmap = BitmapFactory.decodeStream(bufferedInputStream);
-
-                        if (bitmap != null) {
-                            Log.e(LOG_TAG, "Bitmap was created" + bitmap.getByteCount());
-                        }
-                        else
-                        {
-                            Log.e(LOG_TAG, "Bitmap load was faild");
-                        }
-
-*/
-                        ImageService.loadIconImage(inputStream, new ImageLoaderListener() {
+                        driveFile.open(mGoogleApiClient,
+                                DriveFile.MODE_READ_ONLY,
+                                null).setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
                             @Override
-                            public void onLoadComplete(Bitmap bitmap) {
-                                onImageLoaded(file, bitmap);
+                            public void onResult(DriveApi.DriveContentsResult driveContentsResult) {
+                                if (driveContentsResult.getStatus().isSuccess()) {
+
+                                    Log.d(LOG_TAG, "downloadFile::onResult:"
+                                            + driveContentsResult);
+
+                                    DriveContents driveContents = driveContentsResult.getDriveContents();
+                                    InputStream inputStream = driveContents.getInputStream();
+                                    Bitmap bitmap = ImageService.loadIcon(inputStream, bitmabOptions);
+                                    onImageLoaded(file, bitmap);
+                                }
                             }
                         });
+                    } else {
+                        Log.e(LOG_TAG, "downloadFile::onResult: unable to open file:"
+                                + file.getMetadata().getTitle());
                     }
-                } else {
-                    Log.e(LOG_TAG, "downloadFile::onResult: unable to open file:"
-                            + file.getMetadata().getTitle());
                 }
             }
         });
     }
+
 
     private void onImageLoaded(final RemoteFileFile file,
                                Bitmap bitmap) {
