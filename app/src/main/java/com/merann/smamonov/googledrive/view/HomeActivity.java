@@ -3,7 +3,6 @@ package com.merann.smamonov.googledrive.view;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -15,10 +14,13 @@ import com.merann.smamonov.googledrive.R;
 import com.merann.smamonov.googledrive.service.DriveServiceProxy;
 import com.merann.smamonov.googledrive.service.DriveServiceProxyForActivity;
 
+import java.io.File;
+
 public class HomeActivity extends AppCompatActivity {
 
     public final String LOG_TAG = "HomeActivity";
     DriveServiceProxyForActivity mDriveServiceProxy;
+    private static final int OPEN_FILE_DIALOG_REQUETS = 101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,8 +35,15 @@ public class HomeActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                /*
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                        .setAction("Action", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                openFileDialog();
+                            }
+                        }).show();*/
+                openFileDialog();
             }
         });
 
@@ -102,7 +111,23 @@ public class HomeActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d(LOG_TAG, "onActivityResult requestCode:" + requestCode + " resultCode:" + resultCode);
         if (!mDriveServiceProxy.onActivityResultHandler(requestCode, resultCode, data)) {
-            Log.e(LOG_TAG, "unable to handle onActivityResult requestCode:" + requestCode + " resultCode:" + resultCode);
+            switch (requestCode) {
+                case OPEN_FILE_DIALOG_REQUETS: {
+                    if (resultCode == RESULT_OK)
+                    {
+                        File file = (File)data.getSerializableExtra(File.class.getName());
+                        mDriveServiceProxy.uploadFile(file);
+                    }
+                    else
+                    {
+
+                    }
+                    break;
+                }
+                default:
+                    Log.e(LOG_TAG, "unable to handle onActivityResult requestCode:" + requestCode + " resultCode:" + resultCode);
+                    break;
+            }
         }
     }
 
@@ -117,5 +142,10 @@ public class HomeActivity extends AppCompatActivity {
         Log.d(LOG_TAG, "showSettingsActivity");
         Intent settingsIntent = new Intent(this, SettingsActivity.class);
         startActivity(settingsIntent);
+    }
+
+    private void openFileDialog() {
+        Intent intent = new Intent(this, OpenFileActivity.class);
+        startActivityForResult(intent, OPEN_FILE_DIALOG_REQUETS);
     }
 }

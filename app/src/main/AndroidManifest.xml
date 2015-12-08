@@ -3,6 +3,7 @@
     package="com.merann.smamonov.googledrive">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -20,19 +21,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".view.SettingsActivity"></activity>
+        <activity android:name=".view.SettingsActivity" />
+        <activity android:name=".view.OpenFileActivity" />
 
         <service android:name=".service.DriveService">
             <intent-filter>
                 <action android:name="com.merann.smamonov.googledrive.DriveService" />
             </intent-filter>
         </service>
-
         <service android:name=".service.ConfigurationService">
             <intent-filter>
                 <action android:name="com.merann.smamonov.googledrive.ConfigurationService" />
             </intent-filter>
         </service>
+
 
     </application>
 

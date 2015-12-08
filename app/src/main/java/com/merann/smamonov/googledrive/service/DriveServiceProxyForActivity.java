@@ -8,6 +8,8 @@ import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
+import java.io.File;
+
 /**
  * Created by sergeym on 07.12.2015.
  */
@@ -67,6 +69,11 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
                 break;
         }
         return result;
+    }
+
+    public void uploadFile(File file) {
+        sendMessage(createMessage(Message.REMOTE_DRIVE_UPLOAD_FILE_REQUEST)
+                .putExtra(File.class.getName(), file));
     }
 
 

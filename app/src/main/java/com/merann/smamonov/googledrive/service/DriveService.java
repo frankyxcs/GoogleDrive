@@ -8,6 +8,8 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.drive.Drive;
 
+import java.io.File;
+
 /**
  * Created by samam_000 on 06.12.2015.
  */
@@ -46,6 +48,14 @@ public class DriveService extends BaseService {
             public void onIntent(Intent intent) {
                 Log.d(LOG_TAG, "REMOTE_DRIVE_CONFIGURATION_UPDATE_NOTIFICATION");
                 setupConfiguration(intent);
+            }
+        });
+
+        addMessageHandler(Message.REMOTE_DRIVE_UPLOAD_FILE_REQUEST, new IMessageHandler() {
+            @Override
+            public void onIntent(Intent intent) {
+                Log.d(LOG_TAG, "REMOTE_DRIVE_UPLOAD_FILE_REQUEST");
+                uploadFile(intent);
             }
         });
     }
@@ -142,5 +152,14 @@ public class DriveService extends BaseService {
     private void getConfiguration() {
         ConfigurationServiceProxy configurationServiceProxy = new ConfigurationServiceProxy(this, null, null, null);
         configurationServiceProxy.getConfiguration();
+    }
+
+    private void uploadFile(Intent intent)
+    {
+        File file = (File)intent.getSerializableExtra(File.class.getName());
+        Log.d(LOG_TAG, "uploadFile : "
+                + file.getName());
+
+        DriveServiceData.getInstance().uploadFile(file);
     }
 }
