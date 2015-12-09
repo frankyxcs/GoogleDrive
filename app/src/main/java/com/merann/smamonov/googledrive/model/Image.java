@@ -29,4 +29,9 @@ public class Image {
     public Image(String fileName) {
         this.mFileName = fileName;
     }
+
+    public Image(String fileName, Bitmap bitmap) {
+        this.mFileName = fileName;
+        this.mBitmap = bitmap;
+    }
 }

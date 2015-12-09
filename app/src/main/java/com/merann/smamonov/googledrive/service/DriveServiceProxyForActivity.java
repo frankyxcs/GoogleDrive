@@ -18,6 +18,7 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
     public interface DriveServiceProxyListener {
         void onConnectionStateChange(boolean isConneted);
         void onNewFileNotification();
+        void onFileUploadNotification(String fileName, Boolean isSuccess);
     }
 
     Activity mActivityContext;
@@ -61,6 +62,17 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
             @Override
             public void onIntent(Intent intent) {
                 Log.d(LOG_TAG, "REMOTE_DRIVE_NEW_FILE_NOTIFY");
+                mDriveServiceProxyListener.onNewFileNotification();
+            }
+        });
+
+        addMessageHandler(Message.REMOTE_DRIVE_UPLOAD_FILE_RESPONSE, new IMessageHandler() {
+            @Override
+            public void onIntent(Intent intent) {
+                Log.d(LOG_TAG, "REMOTE_DRIVE_UPLOAD_FILE_RESPONSE");
+                String fileName = (String)intent.getSerializableExtra(String.class.getName());
+                Boolean isSuccess = (Boolean)intent.getSerializableExtra(Boolean.class.getName());
+                mDriveServiceProxyListener.onFileUploadNotification(fileName, isSuccess);
 
             }
         });
@@ -106,6 +118,7 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
     }
 
     public void uploadFile(File file) {
+        Log.d(LOG_TAG, "uploadFile: " + file.getName());
         sendMessage(createMessage(Message.REMOTE_DRIVE_UPLOAD_FILE_REQUEST)
                 .putExtra(File.class.getName(), file));
     }

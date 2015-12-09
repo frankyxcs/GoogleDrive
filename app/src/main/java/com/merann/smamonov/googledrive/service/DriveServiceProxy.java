@@ -43,9 +43,4 @@ public class DriveServiceProxy extends ProxyMessageHandler {
         Log.d(LOG_TAG, "handleConnectionEstablished");
         sendMessage(createMessage(Message.REMOTE_DRIVE_LOAD_FILES_REQUEST));
     }
-
-    public void handleNewFile() {
-        Log.d(LOG_TAG, "handleNewFile");
-        sendMessage(createMessage(Message.REMOTE_DRIVE_NEW_FILE_NOTIFY));
-    }
 }

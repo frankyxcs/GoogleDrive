@@ -10,17 +10,24 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.merann.smamonov.googledrive.R;
+import com.merann.smamonov.googledrive.model.Image;
 import com.merann.smamonov.googledrive.service.DriveServiceProxyForActivity;
+import com.merann.smamonov.googledrive.service.RemoteStorageManager;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HomeActivity extends AppCompatActivity {
 
     public final String LOG_TAG = "HomeActivity";
     DriveServiceProxyForActivity mDriveServiceProxy;
     private static final int OPEN_FILE_DIALOG_REQUEST = 101;
+    List<Image> mImages = new ArrayList<>();
+    ListViewAdapter mListViewAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,24 +54,50 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
-        ListView listView = (ListView) findViewById(R.id.listView);
-        //listView.setAdapter(new ListViewAdapter(this, getImagesList()));
+        updateImageList();
+        updateListView();
 
         mDriveServiceProxy = new DriveServiceProxyForActivity(this,
                 new DriveServiceProxyForActivity.DriveServiceProxyListener() {
 
                     @Override
                     public void onConnectionStateChange(boolean isConneted) {
+                        Log.d(LOG_TAG, "onConnectionStateChange");
                         onServiceConnected(isConneted);
                     }
 
                     @Override
                     public void onNewFileNotification() {
+                        Log.d(LOG_TAG, "onNewFileNotification");
+                        updateImageList();
+                    }
 
+                    @Override
+                    public void onFileUploadNotification(String fileName, Boolean isSuccess) {
+                        Log.d(LOG_TAG, "onFileUploadNotification");
+                        String message;
+
+
+                        if (isSuccess) {
+                            message = "File " + fileName + " was successfully uploaded";
+                        } else
+
+                        {
+                            message = "File " + fileName + " upload was failed";
+                        }
+                        Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT);
+                        toast.show();
                     }
                 });
 
         onServiceConnected(false);
+    }
+
+    private void updateListView() {
+        Log.d(LOG_TAG, "updateListView");
+        ListView listView = (ListView) findViewById(R.id.listView);
+        mListViewAdapter = new ListViewAdapter(this, mImages);
+        listView.setAdapter(mListViewAdapter);
     }
 
     @Override
@@ -159,5 +192,11 @@ public class HomeActivity extends AppCompatActivity {
     private void openFileDialog() {
         Intent intent = new Intent(this, OpenFileActivity.class);
         startActivityForResult(intent, OPEN_FILE_DIALOG_REQUEST);
+    }
+
+    private void updateImageList() {
+        Log.d(LOG_TAG, "updateImageList");
+        mImages = RemoteStorageManager.getInstance().getImagesList();
+        updateListView();
     }
 }

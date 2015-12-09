@@ -33,7 +33,7 @@ public class OpenFileActivity extends AppCompatActivity {
 
                 Log.d(LOG_TAG, "onItemClick position:" + position);
                 Image image = (Image) parent.getItemAtPosition(position);
-                File file =LocalStorageManager.getInstance().getFileByFileName(image.getFileName());
+                File file = LocalStorageManager.getInstance().getFileByFileName(image.getFileName());
                 Intent intent = new Intent();
                 intent.putExtra(File.class.getName(), file);
                 setResult(RESULT_OK, intent);

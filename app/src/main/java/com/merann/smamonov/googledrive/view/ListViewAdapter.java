@@ -7,12 +7,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.merann.smamonov.googledrive.R;
 import com.merann.smamonov.googledrive.model.Image;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,9 +21,10 @@ import java.util.List;
  */
 public class ListViewAdapter extends BaseAdapter {
 
-    class ViewHolder{
+    class ViewHolder {
         TextView mTextView;
         ImageView mImageView;
+        ProgressBar mProgressBar;
         Image mImage;
 
         public ViewHolder(Image image) {
@@ -52,6 +53,14 @@ public class ListViewAdapter extends BaseAdapter {
 
         public void setImage(Image mImage) {
             this.mImage = mImage;
+        }
+
+        public ProgressBar getProgressBar() {
+            return mProgressBar;
+        }
+
+        public void setProgressBar(ProgressBar progressBar) {
+            this.mProgressBar = progressBar;
         }
     }
 
@@ -96,6 +105,7 @@ public class ListViewAdapter extends BaseAdapter {
 
             viewHolder.setTextView((TextView) convertView.findViewById(R.id.image_text));
             viewHolder.setImageView((ImageView) convertView.findViewById(R.id.image));
+            viewHolder.setProgressBar((ProgressBar) convertView.findViewById(R.id.progress));
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
@@ -103,6 +113,14 @@ public class ListViewAdapter extends BaseAdapter {
 
         if (viewHolder != null) {
             viewHolder.getTextView().setText(viewHolder.getImage().getFileName());
+            if (viewHolder.getImage().getBitmap() != null) {
+                ImageView imageView = viewHolder.getImageView();
+                imageView.setImageBitmap(viewHolder.getImage().getBitmap());
+                imageView.setVisibility(View.VISIBLE);
+
+                ProgressBar progressBar = viewHolder.getProgressBar();
+                progressBar.setVisibility(View.INVISIBLE);
+            }
         }
 
         return convertView;

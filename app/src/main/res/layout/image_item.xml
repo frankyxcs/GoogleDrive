@@ -16,7 +16,7 @@
             android:visibility="invisible" />
 
         <ProgressBar
-            android:id="@+id/progressBar"
+            android:id="@+id/progress"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:indeterminate="true" />

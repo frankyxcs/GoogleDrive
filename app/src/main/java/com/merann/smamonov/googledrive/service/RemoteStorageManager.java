@@ -20,6 +20,7 @@ import com.google.android.gms.drive.MetadataChangeSet;
 import com.google.android.gms.drive.query.Filters;
 import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SearchableField;
+import com.merann.smamonov.googledrive.model.Image;
 
 import org.apache.commons.io.IOUtils;
 
@@ -34,11 +35,11 @@ import java.util.List;
  * Created by sergeym on 07.12.2015.
  */
 
-public class DriveServiceData {
+public class RemoteStorageManager {
 
-    interface OnNewFileListener
-    {
+    interface RemoteStorageManagerListener {
         void onNewFile(String fileName);
+        void onFileUpload(String fileName, boolean isSuccess);
     }
 
     private class RemoteFileFile {
@@ -66,22 +67,22 @@ public class DriveServiceData {
         }
     }
 
-    private final static String LOG_TAG = "DriveServiceData";
+    private final static String LOG_TAG = "RemoteStorageManager";
 
     private GoogleApiClient mGoogleApiClient;
     ConfigurationService.Configuration mCurrentConfiguration;
     private List<RemoteFileFile> mFiles = new ArrayList<>();
     boolean mIsConnectionRequested;
     DriveFolder mDriveFolder;
-    OnNewFileListener mOnNewFileListener;
+    RemoteStorageManagerListener mRemoteStorageManagerListener;
 
-    private static DriveServiceData ourInstance = new DriveServiceData();
+    private static RemoteStorageManager ourInstance = new RemoteStorageManager();
 
-    public static DriveServiceData getInstance() {
+    public static RemoteStorageManager getInstance() {
         return ourInstance;
     }
 
-    private DriveServiceData() {
+    private RemoteStorageManager() {
     }
 
     public boolean isConnectionRequested() {
@@ -96,12 +97,16 @@ public class DriveServiceData {
         return mCurrentConfiguration;
     }
 
+    public boolean isConnected() {
+        return mGoogleApiClient.isConnected();
+    }
+
     public void setCurrentConfiguration(ConfigurationService.Configuration mCurrentConfiguration) {
         this.mCurrentConfiguration = mCurrentConfiguration;
     }
 
-    public void setOnNewFileListener(OnNewFileListener onNewFileListener) {
-        this.mOnNewFileListener = onNewFileListener;
+    public void setOnNewFileListener(RemoteStorageManagerListener remoteStorageManagerListener) {
+        this.mRemoteStorageManagerListener = remoteStorageManagerListener;
     }
 
     public GoogleApiClient getGoogleApiClient() {
@@ -112,25 +117,22 @@ public class DriveServiceData {
         this.mGoogleApiClient = mGoogleApiClient;
     }
 
-    public static DriveServiceData getOurInstance() {
+    public static RemoteStorageManager getOurInstance() {
         return ourInstance;
     }
 
-    public Bitmap getImageByFilename(String fileName)
-    {
+    public Bitmap getImageByFilename(String fileName) {
         Bitmap result = null;
-        for (RemoteFileFile file : mFiles)
-        {
-            if (file.getMetadata().getTitle().equals(fileName))
-            {
+        for (RemoteFileFile file : mFiles) {
+            if (file.getMetadata().getTitle().equals(fileName)) {
                 result = file.getBitmap();
             }
         }
         return result;
     }
 
-    public static void setOurInstance(DriveServiceData ourInstance) {
-        DriveServiceData.ourInstance = ourInstance;
+    public static void setOurInstance(RemoteStorageManager ourInstance) {
+        RemoteStorageManager.ourInstance = ourInstance;
     }
 
     private PendingResult<DriveFolder.DriveFolderResult> prepareCreateFolderRequest(final String newFolderName) {
@@ -429,6 +431,8 @@ public class DriveServiceData {
     private void handleUploadFileResult(DriveFolder.DriveFileResult driveFileResult,
                                         final File file) {
         Log.d(LOG_TAG, "handleUploadFileResult");
+
+        boolean result = driveFileResult.getStatus().isSuccess();
         if (driveFileResult.getStatus().isSuccess()) {
             DriveFile driveFile = driveFileResult.getDriveFile();
             if (driveFile != null) {
@@ -442,6 +446,8 @@ public class DriveServiceData {
                     + ", message " +
                     driveFileResult.getStatus().getStatusMessage());
         }
+
+        mRemoteStorageManagerListener.onFileUpload(file.getName(), result);
     }
 
     public void uploadFileSync(final File file) {
@@ -570,7 +576,7 @@ public class DriveServiceData {
             Bitmap bitmap = handleOpenRemoteFileResponseToLoadFile(file, driveContentsResult, bitmapOptions);
 
             if (bitmap != null) {
-                file.setBitmap(bitmap);
+                onImageLoaded(file, bitmap);
             }
         }
     }
@@ -594,7 +600,8 @@ public class DriveServiceData {
                                                     bitmapOptions);
 
                                             if (bitmap != null) {
-                                                file.setBitmap(bitmap);
+                                                //file.setBitmap(bitmap);
+                                                onImageLoaded(file, bitmap);
                                             }
                                         }
                                     });
@@ -610,5 +617,17 @@ public class DriveServiceData {
                 + " size:"
                 + bitmap.getByteCount());
         file.setBitmap(bitmap);
+
+        mRemoteStorageManagerListener.onNewFile(file.getMetadata().getTitle());
+    }
+
+    public List<Image> getImagesList() {
+        List<Image> result = new ArrayList<>();
+
+        for (RemoteFileFile remoteFileFile : mFiles) {
+            result.add(new Image(remoteFileFile.getMetadata().getTitle(),
+                    remoteFileFile.getBitmap()));
+        }
+        return result;
     }
 }

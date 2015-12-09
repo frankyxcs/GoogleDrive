@@ -67,11 +67,17 @@ public class DriveService extends BaseService {
             }
         });
 
-        DriveServiceData.getInstance().setOnNewFileListener(new DriveServiceData.OnNewFileListener() {
+        RemoteStorageManager.getInstance().setOnNewFileListener(new RemoteStorageManager.RemoteStorageManagerListener() {
             @Override
             public void onNewFile(String fileName) {
-                DriveServiceProxy driveServiceProxy = new DriveServiceProxy(getBaseContext());
-                driveServiceProxy.handleNewFile();
+                sendMessage(createMessage(Message.REMOTE_DRIVE_NEW_FILE_NOTIFY)
+                        .putExtra(String.class.getName(), fileName));
+            }
+
+            @Override
+            public void onFileUpload(String fileName, boolean isSuccess) {
+                sendMessage(createMessage(Message.REMOTE_DRIVE_UPLOAD_FILE_RESPONSE)
+                        .putExtra(Boolean.class.getName(), isSuccess));
             }
         });
     }
@@ -82,25 +88,22 @@ public class DriveService extends BaseService {
     }
 
     /* Business logic */
-
-
     private void connect() {
         Log.d(LOG_TAG, "connect");
 
-        if (DriveServiceData.getInstance().getCurrentConfiguration() == null) {
+        if (RemoteStorageManager.getInstance().getCurrentConfiguration() == null) {
             Log.d(LOG_TAG, "Connection requested while we have no configuration");
-            DriveServiceData.getInstance().setIsConnectionRequested(true);
+            RemoteStorageManager.getInstance().setIsConnectionRequested(true);
             getConfiguration();
-        } else if (DriveServiceData.getInstance().getGoogleApiClient() != null) {
-            Log.d(LOG_TAG, "connect isConnecting:"
-                    + DriveServiceData.getInstance().getGoogleApiClient().isConnecting()
-                    + " isConnected:"
-                    + DriveServiceData.getInstance().getGoogleApiClient().isConnected());
-
-            DriveServiceData.getInstance().getGoogleApiClient().connect();
+        } else if (RemoteStorageManager.getInstance().getGoogleApiClient() != null) {
+            if (RemoteStorageManager.getInstance().isConnected()) {
+                onConnectionEstablished();
+            } else {
+                RemoteStorageManager.getInstance().getGoogleApiClient().connect();
+            }
         } else {
             Log.d(LOG_TAG, "connect mGoogleApiClient doesn't exists");
-            DriveServiceData.getInstance().setGoogleApiClient(new GoogleApiClient.Builder(this)
+            RemoteStorageManager.getInstance().setGoogleApiClient(new GoogleApiClient.Builder(this)
                     .addApi(Drive.API)
                     .addScope(Drive.SCOPE_FILE)
                     .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
@@ -127,7 +130,7 @@ public class DriveService extends BaseService {
                     })
                     .build());
             Log.d(LOG_TAG, "connect mGoogleApiClient.connect()");
-            DriveServiceData.getInstance().getGoogleApiClient().connect();
+            RemoteStorageManager.getInstance().getGoogleApiClient().connect();
         }
     }
 
@@ -139,7 +142,7 @@ public class DriveService extends BaseService {
     private void handleConnectionEstablished() {
         Log.d(LOG_TAG, "handleConnectionEstablished");
         sendMessage(createMessage(Message.REMOTE_DRIVE_CONNECT_RESPONSE));
-        DriveServiceData.getInstance().getFilesSync();
+        RemoteStorageManager.getInstance().getFilesSync();
     }
 
     private void onConnectionLost() {
@@ -157,17 +160,17 @@ public class DriveService extends BaseService {
     private void setupConfiguration(Intent intent) {
         Log.d(LOG_TAG, "setupConfiguration");
 
-        DriveServiceData.getInstance().setCurrentConfiguration((ConfigurationService.Configuration) intent
+        RemoteStorageManager.getInstance().setCurrentConfiguration((ConfigurationService.Configuration) intent
                 .getSerializableExtra(ConfigurationService
                         .Configuration
                         .class
                         .getName()));
 
         Log.d(LOG_TAG, "setupConfiguration : configuration was updated: "
-                + DriveServiceData.getInstance().getCurrentConfiguration().getFolderName()
-                + DriveServiceData.getInstance().getCurrentConfiguration().getSyncPeriod());
+                + RemoteStorageManager.getInstance().getCurrentConfiguration().getFolderName()
+                + RemoteStorageManager.getInstance().getCurrentConfiguration().getSyncPeriod());
 
-        if (DriveServiceData.getInstance().isConnectionRequested()) {
+        if (RemoteStorageManager.getInstance().isConnectionRequested()) {
             connect();
         }
     }
@@ -182,6 +185,6 @@ public class DriveService extends BaseService {
         Log.d(LOG_TAG, "uploadFile : "
                 + file.getName());
 
-        DriveServiceData.getInstance().uploadFileSync(file);
+        RemoteStorageManager.getInstance().uploadFileSync(file);
     }
 }
