@@ -15,19 +15,53 @@ import java.io.File;
  */
 public class DriveServiceProxyForActivity extends DriveServiceProxy {
 
+    public interface DriveServiceProxyListener {
+        void onConnectionStateChange(boolean isConneted);
+        void onNewFileNotification();
+    }
+
     Activity mActivityContext;
     static private final String LOG_TAG = "DriveServiceProxyForAct";
     static private final int GOOGLE_DRIVE_RESOLUTION_RESULT = 100;
+    DriveServiceProxyListener mDriveServiceProxyListener;
 
-    public DriveServiceProxyForActivity(Activity activity, OnConnectionStateChangeListener onConnectionStateChangeListener) {
-        super(activity, onConnectionStateChangeListener);
+    public DriveServiceProxyForActivity(Activity activity, DriveServiceProxyListener driveServiceProxyListener) {
+        super(activity);
+
+        Log.d(LOG_TAG, "DriveServiceProxy");
+
         mActivityContext = activity;
+        this.mDriveServiceProxyListener = driveServiceProxyListener;
+
+        addMessageHandler(Message.REMOTE_DRIVE_DISCONNECT_NOTIFICATION, new IMessageHandler() {
+            @Override
+            public void onIntent(Intent intent) {
+                Log.d(LOG_TAG, "REMOTE_DRIVE_DISCONNECT_NOTIFICATION");
+                mDriveServiceProxyListener.onConnectionStateChange(false);
+            }
+        });
+
+        addMessageHandler(Message.REMOTE_DRIVE_CONNECT_NOTIFICATION, new IMessageHandler() {
+            @Override
+            public void onIntent(Intent intent) {
+                Log.d(LOG_TAG, "REMOTE_DRIVE_CONNECT_NOTIFICATION");
+                mDriveServiceProxyListener.onConnectionStateChange(true);
+            }
+        });
 
         addMessageHandler(Message.REMOTE_DRIVE_AUTHENTICATION_PERFORM_REQUEST, new IMessageHandler() {
             @Override
             public void onIntent(Intent intent) {
                 Log.d(LOG_TAG, "REMOTE_DRIVE_AUTHENTICATION_PERFORM_REQUEST");
                 handleAuthenticationRequest(intent);
+            }
+        });
+
+        addMessageHandler(Message.REMOTE_DRIVE_NEW_FILE_NOTIFY, new IMessageHandler() {
+            @Override
+            public void onIntent(Intent intent) {
+                Log.d(LOG_TAG, "REMOTE_DRIVE_NEW_FILE_NOTIFY");
+
             }
         });
     }

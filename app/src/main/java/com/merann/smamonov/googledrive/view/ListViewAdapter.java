@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.merann.smamonov.googledrive.R;
+import com.merann.smamonov.googledrive.model.Image;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -20,43 +21,37 @@ import java.util.List;
  */
 public class ListViewAdapter extends BaseAdapter {
 
-    class ViewHolder {
-        TextView text;
-        ImageView image;
-        File file;
+    class ViewHolder{
+        TextView mTextView;
+        ImageView mImageView;
+        Image mImage;
 
-        public ViewHolder(TextView text, ImageView image, File file) {
-            this.text = text;
-            this.image = image;
-            this.file = file;
+        public ViewHolder(Image image) {
+            this.mImage = image;
         }
 
-        public ViewHolder(File file) {
-            this.file = file;
+        public TextView getTextView() {
+            return mTextView;
         }
 
-        public TextView getText() {
-            return text;
+        public void setTextView(TextView mTextView) {
+            this.mTextView = mTextView;
         }
 
-        public void setText(TextView text) {
-            this.text = text;
+        public ImageView getImageView() {
+            return mImageView;
         }
 
-        public ImageView getImage() {
-            return image;
+        public void setImageView(ImageView mImageView) {
+            this.mImageView = mImageView;
         }
 
-        public void setImage(ImageView image) {
-            this.image = image;
+        public Image getImage() {
+            return mImage;
         }
 
-        public File getFile() {
-            return file;
-        }
-
-        public void setFile(File file) {
-            this.file = file;
+        public void setImage(Image mImage) {
+            this.mImage = mImage;
         }
     }
 
@@ -64,11 +59,11 @@ public class ListViewAdapter extends BaseAdapter {
     private final Context context;
 
     public ListViewAdapter(Context context,
-                           List<File> files) {
+                           List<Image> images) {
         this.context = context;
 
-        for (File file : files) {
-            ViewHolder viewHolder = new ViewHolder(file);
+        for (Image image : images) {
+            ViewHolder viewHolder = new ViewHolder(image);
             viewHolders.add(viewHolder);
         }
     }
@@ -80,7 +75,7 @@ public class ListViewAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int position) {
-        return viewHolders.get(position).getFile();
+        return viewHolders.get(position).getImage();
     }
 
     @Override
@@ -99,15 +94,15 @@ public class ListViewAdapter extends BaseAdapter {
             LayoutInflater inflater = ((Activity) context).getLayoutInflater();
             convertView = inflater.inflate(R.layout.image_item, parent, false);
 
-            viewHolder.setText((TextView) convertView.findViewById(R.id.image_text));
-            viewHolder.setImage((ImageView) convertView.findViewById(R.id.image));
+            viewHolder.setTextView((TextView) convertView.findViewById(R.id.image_text));
+            viewHolder.setImageView((ImageView) convertView.findViewById(R.id.image));
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
 
         if (viewHolder != null) {
-            viewHolder.getText().setText(viewHolder.getFile().getName());
+            viewHolder.getTextView().setText(viewHolder.getImage().getFileName());
         }
 
         return convertView;

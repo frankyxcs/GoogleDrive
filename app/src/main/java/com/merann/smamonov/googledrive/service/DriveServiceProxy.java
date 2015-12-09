@@ -1,7 +1,6 @@
 package com.merann.smamonov.googledrive.service;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 
 /**
@@ -9,39 +8,13 @@ import android.util.Log;
  */
 public class DriveServiceProxy extends ProxyMessageHandler {
 
-    public interface OnConnectionStateChangeListener {
-        void onConnectionStateChange(boolean isConneted);
-    }
-
-    interface OnNewFileDetectedListener {
-        void onNewFileDetectedListener();
-    }
-
-    OnConnectionStateChangeListener mOnConnectionStateChangeListener;
-
     static private final String LOG_TAG = "DriveServiceProxy";
 
-    public DriveServiceProxy(Context context, OnConnectionStateChangeListener onConnectionStateChangeListener) {
+    public DriveServiceProxy(Context context) {
         super(context, LOG_TAG, DriveService.INTEND_STRING);
-        mContext = context;
-        this.mOnConnectionStateChangeListener = onConnectionStateChangeListener;
         Log.d(LOG_TAG, "DriveServiceProxy");
-
-        addMessageHandler(Message.REMOTE_DRIVE_DISCONNECT_NOTIFICATION, new IMessageHandler() {
-            @Override
-            public void onIntent(Intent intent) {
-                Log.d(LOG_TAG, "REMOTE_DRIVE_DISCONNECT_NOTIFICATION");
-                mOnConnectionStateChangeListener.onConnectionStateChange(false);
-            }
-        });
-
-        addMessageHandler(Message.REMOTE_DRIVE_CONNECT_NOTIFICATION, new IMessageHandler() {
-            @Override
-            public void onIntent(Intent intent) {
-                Log.d(LOG_TAG, "REMOTE_DRIVE_CONNECT_NOTIFICATION");
-                mOnConnectionStateChangeListener.onConnectionStateChange(true);
-            }
-        });
+        mContext = context;
+        Log.d(LOG_TAG, "DriveServiceProxy");
     }
 
     public void bind() {
@@ -64,5 +37,15 @@ public class DriveServiceProxy extends ProxyMessageHandler {
         Log.d(LOG_TAG, "handleConfigurationUpdate");
         sendMessage(createMessage(Message.REMOTE_DRIVE_CONFIGURATION_UPDATE_NOTIFICATION)
                 .putExtra(ConfigurationService.Configuration.class.getName(), newConfiguration));
+    }
+
+    public void handleConnectionEstablished() {
+        Log.d(LOG_TAG, "handleConnectionEstablished");
+        sendMessage(createMessage(Message.REMOTE_DRIVE_LOAD_FILES_REQUEST));
+    }
+
+    public void handleNewFile() {
+        Log.d(LOG_TAG, "handleNewFile");
+        sendMessage(createMessage(Message.REMOTE_DRIVE_NEW_FILE_NOTIFY));
     }
 }

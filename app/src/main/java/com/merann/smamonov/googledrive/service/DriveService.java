@@ -58,6 +58,22 @@ public class DriveService extends BaseService {
                 uploadFile(intent);
             }
         });
+
+        addMessageHandler(Message.REMOTE_DRIVE_LOAD_FILES_REQUEST, new IMessageHandler() {
+            @Override
+            public void onIntent(Intent intent) {
+                Log.d(LOG_TAG, "REMOTE_DRIVE_LOAD_FILES_REQUEST");
+                handleConnectionEstablished();
+            }
+        });
+
+        DriveServiceData.getInstance().setOnNewFileListener(new DriveServiceData.OnNewFileListener() {
+            @Override
+            public void onNewFile(String fileName) {
+                DriveServiceProxy driveServiceProxy = new DriveServiceProxy(getBaseContext());
+                driveServiceProxy.handleNewFile();
+            }
+        });
     }
 
     @Override
@@ -91,6 +107,8 @@ public class DriveService extends BaseService {
                         @Override
                         public void onConnected(Bundle bundle) {
                             Log.d(LOG_TAG, "onConnected");
+                            DriveServiceProxy driveServiceProxy = new DriveServiceProxy(getBaseContext());
+                            driveServiceProxy.handleConnectionEstablished();
                             onConnectionEstablished();
                         }
 
@@ -115,8 +133,13 @@ public class DriveService extends BaseService {
 
     private void onConnectionEstablished() {
         Log.d(LOG_TAG, "onConnectionEstablished");
+        sendMessage(createMessage(Message.REMOTE_DRIVE_CONNECT_NOTIFICATION));
+    }
+
+    private void handleConnectionEstablished() {
+        Log.d(LOG_TAG, "handleConnectionEstablished");
         sendMessage(createMessage(Message.REMOTE_DRIVE_CONNECT_RESPONSE));
-        DriveServiceData.getInstance().getFilesAsync();
+        DriveServiceData.getInstance().getFilesSync();
     }
 
     private void onConnectionLost() {
@@ -154,12 +177,11 @@ public class DriveService extends BaseService {
         configurationServiceProxy.getConfiguration();
     }
 
-    private void uploadFile(Intent intent)
-    {
-        File file = (File)intent.getSerializableExtra(File.class.getName());
+    private void uploadFile(Intent intent) {
+        File file = (File) intent.getSerializableExtra(File.class.getName());
         Log.d(LOG_TAG, "uploadFile : "
                 + file.getName());
 
-        DriveServiceData.getInstance().uploadFile(file);
+        DriveServiceData.getInstance().uploadFileSync(file);
     }
 }

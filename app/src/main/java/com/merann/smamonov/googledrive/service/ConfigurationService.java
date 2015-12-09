@@ -66,7 +66,7 @@ public class ConfigurationService extends BaseService {
                                 configuration));
 
                 /* notify Drive Service */
-                DriveServiceProxy driveServiceProxy = new DriveServiceProxy(getBaseContext(), null);
+                DriveServiceProxy driveServiceProxy = new DriveServiceProxy(getBaseContext());
                 driveServiceProxy.handleConfigurationUpdate(configuration);
 
             }
@@ -80,7 +80,7 @@ public class ConfigurationService extends BaseService {
                 updateConfiguration(configuration);
 
                 /* notify Drive Service */
-                DriveServiceProxy driveServiceProxy = new DriveServiceProxy(getBaseContext(), null);
+                DriveServiceProxy driveServiceProxy = new DriveServiceProxy(getBaseContext());
                 driveServiceProxy.handleConfigurationUpdate(configuration);
 
                 /* notify client */
