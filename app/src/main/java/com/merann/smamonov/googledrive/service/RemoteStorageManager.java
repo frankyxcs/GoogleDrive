@@ -17,6 +17,8 @@ import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.Metadata;
 import com.google.android.gms.drive.MetadataBuffer;
 import com.google.android.gms.drive.MetadataChangeSet;
+import com.google.android.gms.drive.events.ChangeEvent;
+import com.google.android.gms.drive.events.ChangeListener;
 import com.google.android.gms.drive.query.Filters;
 import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SearchableField;
@@ -39,6 +41,7 @@ public class RemoteStorageManager {
 
     interface RemoteStorageManagerListener {
         void onNewFile(String fileName);
+
         void onFileUpload(String fileName, boolean isSuccess);
     }
 
@@ -75,6 +78,7 @@ public class RemoteStorageManager {
     boolean mIsConnectionRequested;
     DriveFolder mDriveFolder;
     RemoteStorageManagerListener mRemoteStorageManagerListener;
+    ChangeListener mChangeListener;
 
     private static RemoteStorageManager ourInstance = new RemoteStorageManager();
 
@@ -223,6 +227,7 @@ public class RemoteStorageManager {
                 Metadata metadata = metadataBuffer.get(index);
                 printFileInfo(metadata);
                 mFiles.add(new RemoteFileFile(metadata));
+                mRemoteStorageManagerListener.onNewFile(metadata.getTitle());
             }
         }
     }
@@ -629,5 +634,71 @@ public class RemoteStorageManager {
                     remoteFileFile.getBitmap()));
         }
         return result;
+    }
+
+    private PendingResult<Status> prepareSubscriptionToStateChangeRequest() {
+        //todo: unsubscribe if not null
+        mChangeListener = new ChangeListener() {
+            @Override
+            public void onChange(ChangeEvent changeEvent) {
+
+            }
+        };
+
+        return mDriveFolder.addChangeListener(mGoogleApiClient, mChangeListener);
+    }
+
+    private void handleSubscriptionToStateChangeResponse(Status status) {
+        if (status.isSuccess()) {
+
+        } else {
+            Log.e(LOG_TAG, "Unable to subscribe on folder" +
+                    mCurrentConfiguration.getFolderName()
+                    + "state change, reason:"
+                    + status.getStatusMessage());
+        }
+    }
+
+    private void subscribeToFolderStateChangeSync() {
+        Status status = prepareSubscriptionToStateChangeRequest().await();
+        handleSubscriptionToStateChangeResponse(status);
+    }
+
+    private void subscribeToFolderStateChangeAsync() {
+        prepareSubscriptionToStateChangeRequest().setResultCallback(new ResultCallback<Status>() {
+            @Override
+            public void onResult(Status status) {
+                handleSubscriptionToStateChangeResponse(status);
+            }
+        });
+    }
+
+    private void unsubscribeFromFolderStateChangeSync() {
+        Status status = prepareUnsubscriptionFromStateChangeRequest().await();
+        handleUnsubscriptionFromStateChangeResponse(status);
+    }
+
+    private void unsubscribeFromFolderStateChangeAsync() {
+        prepareUnsubscriptionFromStateChangeRequest().setResultCallback(new ResultCallback<Status>() {
+            @Override
+            public void onResult(Status status) {
+                handleUnsubscriptionFromStateChangeResponse(status);
+            }
+        });
+    }
+
+    private PendingResult<Status> prepareUnsubscriptionFromStateChangeRequest() {
+        return mDriveFolder.removeChangeListener(mGoogleApiClient, mChangeListener);
+    }
+
+    private void handleUnsubscriptionFromStateChangeResponse(Status status) {
+        if (status.isSuccess()) {
+
+        } else {
+            Log.e(LOG_TAG, "Unable to subscribe on folder" +
+                    mCurrentConfiguration.getFolderName()
+                    + "state change, reason:"
+                    + status.getStatusMessage());
+        }
     }
 }
