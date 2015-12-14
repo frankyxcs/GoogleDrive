@@ -7,6 +7,7 @@ import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.drive.Drive;
+import com.merann.smamonov.googledrive.managers.RemoteStorageManager;
 
 import java.io.File;
 

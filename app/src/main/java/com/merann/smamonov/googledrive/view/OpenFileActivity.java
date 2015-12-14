@@ -12,7 +12,7 @@ import android.widget.ListView;
 
 import com.merann.smamonov.googledrive.R;
 import com.merann.smamonov.googledrive.model.Image;
-import com.merann.smamonov.googledrive.service.LocalStorageManager;
+import com.merann.smamonov.googledrive.managers.LocalStorageManager;
 
 import java.io.File;
 

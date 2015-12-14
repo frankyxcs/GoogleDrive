@@ -15,7 +15,7 @@ import android.widget.Toast;
 import com.merann.smamonov.googledrive.R;
 import com.merann.smamonov.googledrive.model.Image;
 import com.merann.smamonov.googledrive.service.DriveServiceProxyForActivity;
-import com.merann.smamonov.googledrive.service.RemoteStorageManager;
+import com.merann.smamonov.googledrive.managers.RemoteStorageManager;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.merann.smamonov.googledrive.service;
+package com.merann.smamonov.googledrive.managers;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -23,6 +23,7 @@ import com.google.android.gms.drive.query.Filters;
 import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SearchableField;
 import com.merann.smamonov.googledrive.model.Image;
+import com.merann.smamonov.googledrive.service.ConfigurationService;
 
 import org.apache.commons.io.IOUtils;
 
@@ -39,7 +40,7 @@ import java.util.List;
 
 public class RemoteStorageManager {
 
-    interface RemoteStorageManagerListener {
+    public interface RemoteStorageManagerListener {
         void onNewFile(String fileName);
 
         void onFileUpload(String fileName, boolean isSuccess);

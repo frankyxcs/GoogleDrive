@@ -1,4 +1,4 @@
-package com.merann.smamonov.googledrive.service;
+package com.merann.smamonov.googledrive.managers;
 
 import com.merann.smamonov.googledrive.model.Image;
 

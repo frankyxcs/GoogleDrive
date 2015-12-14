@@ -1,4 +1,4 @@
-package com.merann.smamonov.googledrive.service;
+package com.merann.smamonov.googledrive.managers;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -19,7 +19,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     static private final String LOG_TAG = "DataBaseHelper";
     static private final String DATABASE_NAME = "Images";
     static private final String FILE_NAME_FIELD_NAME = "file_name";
-
 
     public DataBaseHelper(Context context) {
         super(context, DATABASE_NAME, null, 1);

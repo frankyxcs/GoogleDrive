@@ -14,7 +14,7 @@ import java.io.Serializable;
  */
 public class ConfigurationService extends BaseService {
 
-    static class Configuration implements Serializable {
+    static public class Configuration implements Serializable {
         int mSyncPeriod;
         String mFolderName;
 

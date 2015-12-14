@@ -1,4 +1,4 @@
-package com.merann.smamonov.googledrive.service;
+package com.merann.smamonov.googledrive.managers;
 
 /**
  * Created by sergeym on 08.12.2015.
@@ -40,7 +40,7 @@ public class ImageService {
             }
         }.execute();
     }
-
+/*
     public static void loadIconImage(final InputStream inputStream,
                                      final ImageLoaderListener imageLoaderListener) {
         Log.d(LOG_TAG, "loadIconImage");
@@ -67,7 +67,7 @@ public class ImageService {
         //Bitmap result = loadIcon(inputStream);
         //imageLoaderListener.onLoadComplete(result);
     }
-
+*/
 
     private static int calculateInSampleSize(BitmapFactory.Options options,
                                              int width,
