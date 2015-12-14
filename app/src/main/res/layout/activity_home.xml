@@ -31,6 +31,6 @@
         android:layout_margin="@dimen/fab_margin"
         android:background="@color/fabBackground"
         android:scaleType="fitXY"
-        android:src="@android:drawable/ic_input_add" />
+        android:src="@drawable/ic_plus" />
 
 </android.support.design.widget.CoordinatorLayout>
