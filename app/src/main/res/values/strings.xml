@@ -8,4 +8,6 @@
     <string name="intend_notification">intend_notification</string>
     <string name="intend_message_type">intend_message_type</string>
     <string name="on_drive_connection_failed_data">on_drive_connection_failed_data</string>
+    <string name="add_file_activity_caption">Add file</string>
+    <string name="home_activity_caption">Remote drive storage</string>
 </resources>

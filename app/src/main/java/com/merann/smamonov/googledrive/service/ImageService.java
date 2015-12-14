@@ -9,6 +9,8 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 
 interface ImageLoaderListener {
@@ -128,6 +130,26 @@ public class ImageService {
                 Log.d(LOG_TAG, "Unable to load image");
             }
         }
+        return result;
+    }
+
+    public static Bitmap loadIcon(File file) {
+        Log.d(LOG_TAG, "loadIcon");
+        Bitmap result = null;
+
+        try {
+            InputStream inputStream = new FileInputStream(file);
+            BitmapFactory.Options bitmapOptions = getIconOptions(inputStream);
+            inputStream.close();
+            inputStream = new FileInputStream(file);
+            result = BitmapFactory.decodeStream(inputStream, null, bitmapOptions);
+            inputStream.close();
+        } catch (Throwable throwable) {
+            Log.d(LOG_TAG, "loadIcon: unable to load file icon");
+        }
+
+        Log.d(LOG_TAG, "loadIcon: image icon was loaded, size:" + result.getByteCount());
+
         return result;
     }
 
