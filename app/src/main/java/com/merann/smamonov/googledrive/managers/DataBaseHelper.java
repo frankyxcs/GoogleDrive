@@ -28,7 +28,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         Log.d(LOG_TAG, "onCreate");
-        db.execSQL("create table +"
+        db.execSQL("create table "
                 + DATABASE_NAME
                 + " ("
                 + "id integer primary key autoincrement,"
@@ -48,7 +48,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     }
 
     public List<Image> getImagesFromDb() {
-
         List<Image> result = new LinkedList();
 
         Cursor cursor = getReadableDatabase().query(DATABASE_NAME,

@@ -17,7 +17,9 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
 
     public interface DriveServiceProxyListener {
         void onConnectionStateChange(boolean isConneted);
+
         void onNewFileNotification();
+
         void onFileUploadNotification(String fileName, Boolean isSuccess);
     }
 
@@ -33,23 +35,23 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
 
         mActivityContext = activity;
         this.mDriveServiceProxyListener = driveServiceProxyListener;
-
-        addMessageHandler(Message.REMOTE_DRIVE_DISCONNECT_NOTIFICATION, new IMessageHandler() {
-            @Override
-            public void onIntent(Intent intent) {
-                Log.d(LOG_TAG, "REMOTE_DRIVE_DISCONNECT_NOTIFICATION");
-                mDriveServiceProxyListener.onConnectionStateChange(false);
-            }
-        });
-
-        addMessageHandler(Message.REMOTE_DRIVE_CONNECT_NOTIFICATION, new IMessageHandler() {
-            @Override
-            public void onIntent(Intent intent) {
-                Log.d(LOG_TAG, "REMOTE_DRIVE_CONNECT_NOTIFICATION");
-                mDriveServiceProxyListener.onConnectionStateChange(true);
-            }
-        });
-
+//
+//        addMessageHandler(Message.REMOTE_DRIVE_DISCONNECT_NOTIFICATION, new IMessageHandler() {
+//            @Override
+//            public void onIntent(Intent intent) {
+//                Log.d(LOG_TAG, "REMOTE_DRIVE_DISCONNECT_NOTIFICATION");
+//                mDriveServiceProxyListener.onConnectionStateChange(false);
+//            }
+//        });
+//
+//        addMessageHandler(Message.REMOTE_DRIVE_CONNECT_NOTIFICATION, new IMessageHandler() {
+//            @Override
+//            public void onIntent(Intent intent) {
+//                Log.d(LOG_TAG, "REMOTE_DRIVE_CONNECT_NOTIFICATION");
+//                mDriveServiceProxyListener.onConnectionStateChange(true);
+//            }
+//        });
+//
         addMessageHandler(Message.REMOTE_DRIVE_AUTHENTICATION_PERFORM_REQUEST, new IMessageHandler() {
             @Override
             public void onIntent(Intent intent) {
@@ -65,20 +67,20 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
                 mDriveServiceProxyListener.onNewFileNotification();
             }
         });
-
-        addMessageHandler(Message.REMOTE_DRIVE_UPLOAD_FILE_RESPONSE, new IMessageHandler() {
-            @Override
-            public void onIntent(Intent intent) {
-                Log.d(LOG_TAG, "REMOTE_DRIVE_UPLOAD_FILE_RESPONSE");
-                String fileName = (String)intent.getSerializableExtra(String.class.getName());
-                Boolean isSuccess = (Boolean)intent.getSerializableExtra(Boolean.class.getName());
-                mDriveServiceProxyListener.onFileUploadNotification(fileName, isSuccess);
-
-            }
-        });
+//
+//        addMessageHandler(Message.REMOTE_DRIVE_UPLOAD_FILE_RESPONSE, new IMessageHandler() {
+//            @Override
+//            public void onIntent(Intent intent) {
+//                Log.d(LOG_TAG, "REMOTE_DRIVE_UPLOAD_FILE_RESPONSE");
+//                String fileName = (String)intent.getSerializableExtra(String.class.getName());
+//                Boolean isSuccess = (Boolean)intent.getSerializableExtra(Boolean.class.getName());
+//                mDriveServiceProxyListener.onFileUploadNotification(fileName, isSuccess);
+//
+//            }
+//        });
     }
 
-    private void handleAuthenticationRequest(Intent intent) {
+    public void handleAuthenticationRequest(Intent intent) {
         Log.d(LOG_TAG, "handleAuthenticationRequest");
         final ConnectionResult connectionResult = intent.getParcelableExtra(ConnectionResult.class.toString());
         if (connectionResult.hasResolution()) {
@@ -122,6 +124,4 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
         sendMessage(createMessage(Message.REMOTE_DRIVE_UPLOAD_FILE_REQUEST)
                 .putExtra(File.class.getName(), file));
     }
-
-
 }

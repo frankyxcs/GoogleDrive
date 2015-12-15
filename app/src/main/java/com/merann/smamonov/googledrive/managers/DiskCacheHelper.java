@@ -12,7 +12,6 @@ import java.io.FileOutputStream;
  * Created by samam_000 on 15.12.2015.
  */
 public class DiskCacheHelper {
-
     private final static String LOG_TAG = "DiskCacheHelper";
     private final static String CacheDirectoryForIcons = "IconsCache";
     private final static String CacheDirectoryForImages = "ImagesCache";
@@ -26,7 +25,7 @@ public class DiskCacheHelper {
     }
 
     private static File getDiskCacheDir(Context context, String subfolder) {
-        final File cacheDirectory = context.getCacheDir();
+        final File cacheDirectory = context.getExternalCacheDir();
         File result = null;
 
         if (cacheDirectory.isDirectory()) {
@@ -52,7 +51,7 @@ public class DiskCacheHelper {
                             + " was created");
                 } else {
                     Log.e(LOG_TAG, "Unable to create subfolder "
-                            + cacheDirectory);
+                            + cacheDirectory.getPath());
                 }
             }
         } else {

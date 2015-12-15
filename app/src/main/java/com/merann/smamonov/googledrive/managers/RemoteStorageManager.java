@@ -1,9 +1,12 @@
 package com.merann.smamonov.googledrive.managers;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Bundle;
 import android.util.Log;
 
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
@@ -22,8 +25,8 @@ import com.google.android.gms.drive.events.ChangeListener;
 import com.google.android.gms.drive.query.Filters;
 import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SearchableField;
+import com.merann.smamonov.googledrive.model.Configuration;
 import com.merann.smamonov.googledrive.model.Image;
-import com.merann.smamonov.googledrive.service.ConfigurationService;
 
 import org.apache.commons.io.IOUtils;
 
@@ -41,9 +44,15 @@ import java.util.List;
 public class RemoteStorageManager {
 
     public interface RemoteStorageManagerListener {
-        void onNewFile(String fileName);
+//        void onNewFile(String fileName, Bitmap icon);
 
         void onFileUpload(String fileName, boolean isSuccess);
+
+        void onConnectionFailed(ConnectionResult connectionResult);
+
+        void onConnectionEstablished();
+
+        void onConnectionSuspended();
     }
 
     private class RemoteFileFile {
@@ -69,46 +78,51 @@ public class RemoteStorageManager {
         public RemoteFileFile(Metadata metadata) {
             this.mMetadata = metadata;
         }
+
+        public Image getImage() {
+            return new Image(getMetadata().getTitle(),
+                    getBitmap());
+        }
     }
 
     private final static String LOG_TAG = "RemoteStorageManager";
 
+    private Context mContext;
+    private StorageManager mStorageManager;
     private GoogleApiClient mGoogleApiClient;
-    ConfigurationService.Configuration mCurrentConfiguration;
+    Configuration mCurrentConfiguration;
     private List<RemoteFileFile> mFiles = new ArrayList<>();
     boolean mIsConnectionRequested;
     DriveFolder mDriveFolder;
     RemoteStorageManagerListener mRemoteStorageManagerListener;
     ChangeListener mChangeListener;
 
-    private static RemoteStorageManager ourInstance = new RemoteStorageManager();
-
-    public static RemoteStorageManager getInstance() {
-        return ourInstance;
-    }
-
-    private RemoteStorageManager() {
+    public RemoteStorageManager(Context context, StorageManager storageManager) {
+        mContext = context;
+        mStorageManager = storageManager;
+        ConfigurationManager configurationManager = new ConfigurationManager(mContext);
+        mCurrentConfiguration = configurationManager.getConfiguration();
     }
 
     public boolean isConnectionRequested() {
         return mIsConnectionRequested;
     }
 
-    public void setIsConnectionRequested(boolean isConnectionRequested) {
-        this.mIsConnectionRequested = isConnectionRequested;
-    }
+//    public void setIsConnectionRequested(boolean isConnectionRequested) {
+//        this.mIsConnectionRequested = isConnectionRequested;
+//    }
 
-    public ConfigurationService.Configuration getCurrentConfiguration() {
-        return mCurrentConfiguration;
-    }
+//    public ConfigurationService.Configuration getCurrentConfiguration() {
+//        return mCurrentConfiguration;
+//    }
 
     public boolean isConnected() {
         return mGoogleApiClient.isConnected();
     }
 
-    public void setCurrentConfiguration(ConfigurationService.Configuration mCurrentConfiguration) {
-        this.mCurrentConfiguration = mCurrentConfiguration;
-    }
+//    public void setCurrentConfiguration(ConfigurationService.Configuration mCurrentConfiguration) {
+//        this.mCurrentConfiguration = mCurrentConfiguration;
+//    }
 
     public void setOnNewFileListener(RemoteStorageManagerListener remoteStorageManagerListener) {
         this.mRemoteStorageManagerListener = remoteStorageManagerListener;
@@ -122,10 +136,6 @@ public class RemoteStorageManager {
         this.mGoogleApiClient = mGoogleApiClient;
     }
 
-    public static RemoteStorageManager getOurInstance() {
-        return ourInstance;
-    }
-
     public Bitmap getImageByFilename(String fileName) {
         Bitmap result = null;
         for (RemoteFileFile file : mFiles) {
@@ -134,10 +144,6 @@ public class RemoteStorageManager {
             }
         }
         return result;
-    }
-
-    public static void setOurInstance(RemoteStorageManager ourInstance) {
-        RemoteStorageManager.ourInstance = ourInstance;
     }
 
     private PendingResult<DriveFolder.DriveFolderResult> prepareCreateFolderRequest(final String newFolderName) {
@@ -227,8 +233,12 @@ public class RemoteStorageManager {
                  index++) {
                 Metadata metadata = metadataBuffer.get(index);
                 printFileInfo(metadata);
-                mFiles.add(new RemoteFileFile(metadata));
-                mRemoteStorageManagerListener.onNewFile(metadata.getTitle());
+
+                RemoteFileFile file = new RemoteFileFile(metadata);
+
+                mFiles.add(file);
+
+                mStorageManager.addRemoteImage(file.getImage());
             }
         }
     }
@@ -622,9 +632,10 @@ public class RemoteStorageManager {
                 + file.getMetadata().getTitle()
                 + " size:"
                 + bitmap.getByteCount());
+
         file.setBitmap(bitmap);
 
-        mRemoteStorageManagerListener.onNewFile(file.getMetadata().getTitle());
+        mStorageManager.addRemoteImage(file.getImage());
     }
 
     public List<Image> getImagesList() {
@@ -702,4 +713,49 @@ public class RemoteStorageManager {
                     + status.getStatusMessage());
         }
     }
+
+    public void connect(final RemoteStorageManagerListener remoteStorageManagerListener) {
+        Log.d(LOG_TAG, "connect");
+
+        if (mGoogleApiClient != null) {
+            if (isConnected()) {
+                remoteStorageManagerListener.onConnectionEstablished();
+            } else {
+                mGoogleApiClient.connect();
+            }
+        } else {
+            Log.d(LOG_TAG, "connect mGoogleApiClient doesn't exists");
+            mGoogleApiClient = new GoogleApiClient.Builder(mContext)
+                    .addApi(Drive.API)
+                    .addScope(Drive.SCOPE_FILE)
+                    .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                        @Override
+                        public void onConnected(Bundle bundle) {
+                            Log.d(LOG_TAG, "onConnected");
+                            remoteStorageManagerListener.onConnectionEstablished();
+                            getFilesAsync();
+                        }
+
+                        @Override
+                        public void onConnectionSuspended(int i) {
+                            Log.d(LOG_TAG, "onConnectionSuspended");
+                            remoteStorageManagerListener.onConnectionSuspended();
+                        }
+                    })
+                    .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                        @Override
+                        public void onConnectionFailed(ConnectionResult connectionResult) {
+                            Log.e(LOG_TAG, "onConnectionFailed");
+                            remoteStorageManagerListener.onConnectionFailed(connectionResult);
+                        }
+                    })
+                    .build();
+            mGoogleApiClient.connect();
+        }
+    }
+
+    public void disconnect() {
+        mGoogleApiClient.disconnect();
+    }
+
 }
