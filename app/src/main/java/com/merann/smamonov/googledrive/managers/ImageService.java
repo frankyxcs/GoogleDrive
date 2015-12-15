@@ -18,7 +18,7 @@ interface ImageLoaderListener {
 }
 
 public class ImageService {
-    private final static String LOG_TAG = "RemoteStorageManager";
+    private final static String LOG_TAG = "ImageService";
 
     public static void loadFullImage(final InputStream inputStream,
                                      final ImageLoaderListener imageLoaderListener) {

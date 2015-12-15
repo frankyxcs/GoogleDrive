@@ -17,7 +17,6 @@ public class LocalStorageManager {
         void onBitmapLoaded(String fileName);
     }
 
-
     private static LocalStorageManager ourInstance = new LocalStorageManager();
     private HashMap<String, Image> mFiles = new HashMap<>();
     private Queue<Image> mImagesToBeLoaded = new LinkedList<Image>();
