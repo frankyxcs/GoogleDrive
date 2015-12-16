@@ -44,20 +44,19 @@ public class DiskCacheHelper {
             }
 
             if (result == null) {
-                result = new File(cacheDirectory.getPath() + "/" + cacheDirectory);
+                result = new File(cacheDirectory.getPath() + "/" + subfolder);
                 if (result.mkdir()) {
                     Log.d(LOG_TAG, "Cache subfolder "
-                            + cacheDirectory
+                            + subfolder
                             + " was created");
                 } else {
                     Log.e(LOG_TAG, "Unable to create subfolder "
-                            + cacheDirectory.getPath());
+                            + subfolder);
                 }
             }
         } else {
             Log.e(LOG_TAG, "Unable to get cache folder");
         }
-
         return result;
     }
 
@@ -87,11 +86,20 @@ public class DiskCacheHelper {
             }
         });
 
-        return results.length == 0 ? results[0] : null;
+        return results.length == 0 ? null : results[0];
     }
 
     private static File createNewFile(File folder, String filename) {
         File result = new File(folder, filename);
+        try {
+            result.createNewFile();
+            Log.d(LOG_TAG, "New file was created: "
+                    + filename);
+        } catch (Throwable throwable) {
+            Log.e(LOG_TAG, "Unable to create new file: "
+                    + throwable.getMessage());
+        }
+
         return result;
     }
 
