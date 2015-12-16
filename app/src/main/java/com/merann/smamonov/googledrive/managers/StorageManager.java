@@ -1,6 +1,7 @@
 package com.merann.smamonov.googledrive.managers;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.merann.smamonov.googledrive.model.Image;
 
@@ -29,6 +30,8 @@ public class StorageManager {
     public StorageManager(Context context,
                           StorageManagerListener storageManagerListener) {
 
+        Log.d(LOG_TAG, "StorageManager");
+
         mContext = context;
         mStorageManagerListener = storageManagerListener;
         mDiskCacheHelper = new DiskCacheHelper(mContext);
@@ -38,12 +41,17 @@ public class StorageManager {
     }
 
     public void loadLocalImages() {
+
+        Log.d(LOG_TAG, "loadLocalImages");
+
         mImages = new HashMap();
 
         List<Image> localImages = mDataBaseHelper.getImagesFromDb();
 
         for (Image image : localImages) {
-
+            Log.e(LOG_TAG, "loadLocalImages local image:"
+                    + image.getFileName());
+            mImages.put(image.getFileName(), image);
         }
     }
 
@@ -61,7 +69,7 @@ public class StorageManager {
             }
         } else {
             // add remote image to database and load save icon in on disk cache
-            mDataBaseHelper.add(remoteImage);
+            mDataBaseHelper.addImage(remoteImage);
             if (remoteImage.getBitmap() != null) {
                 mDiskCacheHelper.saveIconToFile(remoteImage.getFileName(),
                         remoteImage.getBitmap());

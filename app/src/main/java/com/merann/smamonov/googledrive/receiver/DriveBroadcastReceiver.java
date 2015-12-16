@@ -18,5 +18,6 @@ public class DriveBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Log.d(LOG_TAG, "onReceive");
         DriveServiceProxy driveServiceProxy = new DriveServiceProxy(context);
+        driveServiceProxy.start();
     }
 }

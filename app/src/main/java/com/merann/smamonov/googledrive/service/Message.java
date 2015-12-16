@@ -23,6 +23,7 @@ public enum  Message {
         REMOTE_DRIVE_LOAD_FILES_REQUEST,
         REMOTE_DRIVE_NEW_FILE_NOTIFY,
         REMOTE_DRIVE_DO_SYNC,
+        REMOTE_DRIVE_START,
 
         /* undefined command */
         UNDEFINED_COMMAND

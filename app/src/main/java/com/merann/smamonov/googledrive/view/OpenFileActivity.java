@@ -26,21 +26,20 @@ public class OpenFileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_open_file);
 
+        final LocalStorageManager localStorageManager = new LocalStorageManager(LocalStorageManager.MEDIA_STORAGE, new LocalStorageManager.BitmapLoadedListener() {
+            @Override
+            public void onBitmapLoaded(String fileName) {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateListView();
+                    }
+                });
+            }
+        });
+
         final ListView listView = (ListView) findViewById(R.id.listView);
-        mListViewAdapter = new ListViewAdapter(this,
-                LocalStorageManager
-                        .getInstance()
-                        .getImagesList(new LocalStorageManager.BitmapLoadedListener() {
-                            @Override
-                            public void onBitmapLoaded(String fileName) {
-                                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        updateListView();
-                                    }
-                                });
-                            }
-                        }));
+        mListViewAdapter = new ListViewAdapter(this, localStorageManager.getImagesList());
 
         listView.setAdapter(mListViewAdapter);
 
@@ -52,7 +51,7 @@ public class OpenFileActivity extends AppCompatActivity {
 
                                                 Log.d(LOG_TAG, "onItemClick position:" + position);
                                                 Image image = (Image) parent.getItemAtPosition(position);
-                                                File file = LocalStorageManager.getInstance().getFileByFileName(image.getFileName());
+                                                File file = localStorageManager.getFileByFileName(image.getFileName());
                                                 Intent intent = new Intent();
                                                 intent.putExtra(File.class.getName(), file);
                                                 setResult(RESULT_OK, intent);

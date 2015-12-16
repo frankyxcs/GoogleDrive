@@ -47,7 +47,7 @@ public class DiskCacheHelper {
                 result = new File(cacheDirectory.getPath() + "/" + subfolder);
                 if (result.mkdir()) {
                     Log.d(LOG_TAG, "Cache subfolder "
-                            + subfolder
+                            + result.getPath()
                             + " was created");
                 } else {
                     Log.e(LOG_TAG, "Unable to create subfolder "
@@ -94,7 +94,7 @@ public class DiskCacheHelper {
         try {
             result.createNewFile();
             Log.d(LOG_TAG, "New file was created: "
-                    + filename);
+                    + result.getPath());
         } catch (Throwable throwable) {
             Log.e(LOG_TAG, "Unable to create new file: "
                     + throwable.getMessage());
@@ -126,7 +126,7 @@ public class DiskCacheHelper {
     public void saveIconToFile(String filename, Bitmap bitmap) {
         File newFile = getCachedIcon(filename);
 
-        if (filename == null) {
+        if (newFile == null) {
             newFile = createNewIconFile(filename);
         }
         saveBitmapToFile(newFile, bitmap);
@@ -136,7 +136,7 @@ public class DiskCacheHelper {
 
         File newFile = getCachedImage(filename);
 
-        if (filename == null) {
+        if (newFile == null) {
             newFile = createNewImageFile(filename);
         }
         saveBitmapToFile(newFile, bitmap);

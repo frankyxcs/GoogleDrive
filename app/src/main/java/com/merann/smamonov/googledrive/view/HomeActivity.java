@@ -67,11 +67,22 @@ public class HomeActivity extends AppCompatActivity {
             public void onServiceConnected(ComponentName name, IBinder service) {
                 Log.d(LOG_TAG, "onServiceConnected");
                 mDriveServiceBinder = (DriveService.DriveServiceBinder) service;
+                HomeActivity.this.onServiceConnected(true);
+
+                mImages = mDriveServiceBinder.getImagesList();
+
+                for (Image image: mImages)
+                {
+                    Log.e(LOG_TAG, image.getFileName());
+                }
+
+                updateListView();
             }
 
             @Override
             public void onServiceDisconnected(ComponentName name) {
                 Log.d(LOG_TAG, "onServiceConnected");
+                HomeActivity.this.onServiceConnected(false);
             }
         };
 
@@ -224,7 +235,7 @@ public class HomeActivity extends AppCompatActivity {
 
     private void updateImageList() {
         Log.d(LOG_TAG, "updateImageList");
-//        mImages = RemoteStorageManager.getInstance().getImagesList();
+        //mImages = RemoteStorageManager.getInstance().getImagesList();
         updateListView();
     }
 }

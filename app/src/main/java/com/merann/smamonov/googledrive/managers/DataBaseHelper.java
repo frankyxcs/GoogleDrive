@@ -18,6 +18,7 @@ import java.util.List;
 public class DataBaseHelper extends SQLiteOpenHelper {
     static private final String LOG_TAG = "DataBaseHelper";
     static private final String DATABASE_NAME = "Images";
+    static private final String IMAGES_TABLE_NAME = "Images";
     static private final String FILE_NAME_FIELD_NAME = "file_name";
 
     public DataBaseHelper(Context context) {
@@ -41,16 +42,24 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     }
 
-    public long add(Image image) {
+    public long addImage(Image image) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(FILE_NAME_FIELD_NAME, image.getFileName());
-        return getWritableDatabase().insert(DATABASE_NAME, null, contentValues);
+        return getWritableDatabase().insert(IMAGES_TABLE_NAME, null, contentValues);
+    }
+
+    public int deleteImage(Image image) {
+        return getWritableDatabase().delete(IMAGES_TABLE_NAME,
+                FILE_NAME_FIELD_NAME
+                        + " = "
+                        + image.getFileName(),
+                null);
     }
 
     public List<Image> getImagesFromDb() {
         List<Image> result = new LinkedList();
 
-        Cursor cursor = getReadableDatabase().query(DATABASE_NAME,
+        Cursor cursor = getReadableDatabase().query(IMAGES_TABLE_NAME,
                 null,
                 null,
                 null,

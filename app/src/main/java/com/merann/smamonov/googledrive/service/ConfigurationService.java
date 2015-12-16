@@ -6,6 +6,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.merann.smamonov.googledrive.R;
+import com.merann.smamonov.googledrive.model.Configuration;
 
 import java.io.Serializable;
 
@@ -14,6 +15,7 @@ import java.io.Serializable;
  */
 public class ConfigurationService extends BaseService {
 
+    /*
     static public class Configuration implements Serializable {
         int mSyncPeriod;
         String mFolderName;
@@ -39,7 +41,7 @@ public class ConfigurationService extends BaseService {
             this.mSyncPeriod = syncPeriod;
         }
     }
-
+*/
     static public final String INTEND_STRING = "com.merann.smamonov.googledrive.ConfigurationService";
     static private final String LOG_TAG = "ConfigurationService";
     static private String PREFERENCE_FOLDER_NAME = "PREFERENCE_FOLDER_NAME";
@@ -62,7 +64,7 @@ public class ConfigurationService extends BaseService {
                 Log.d(LOG_TAG, "GET_CONFIGURATION_REQUEST");
                 Configuration configuration = getConfiguration();
                 sendMessage(createMessage(Message.GET_CONFIGURATION_RESPONSE)
-                        .putExtra(ConfigurationService.Configuration.class.getName(),
+                        .putExtra(Configuration.class.getName(),
                                 configuration));
 
                 /* notify Drive Service */
@@ -85,7 +87,7 @@ public class ConfigurationService extends BaseService {
 
                 /* notify client */
                 sendMessage(createMessage(Message.UPDATE_CONFIGURATION_RESPONSE)
-                        .putExtra(ConfigurationService.Configuration.class.getName(),
+                        .putExtra(Configuration.class.getName(),
                                 configuration));
             }
         });

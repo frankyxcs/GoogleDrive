@@ -17,24 +17,24 @@ public class LocalStorageManager {
         void onBitmapLoaded(String fileName);
     }
 
-    private static LocalStorageManager ourInstance = new LocalStorageManager();
+    static public final String MEDIA_STORAGE = "/mnt/extSdCard/DCIM/Camera";
+
     private HashMap<String, Image> mFiles = new HashMap<>();
     private Queue<Image> mImagesToBeLoaded = new LinkedList<Image>();
     private Thread mBitmapLoaderTask;
     private BitmapLoadedListener mBitmapLoadedListener;
+    private String mSearchFolder;
 
-    public static LocalStorageManager getInstance() {
-        return ourInstance;
-    }
 
-    private LocalStorageManager() {
-    }
-
-    public List<Image> getImagesList(BitmapLoadedListener bitmapLoadedListener) {
-
+    public LocalStorageManager(String searchFolder, BitmapLoadedListener bitmapLoadedListener) {
         mBitmapLoadedListener = bitmapLoadedListener;
+        mSearchFolder = searchFolder;
+    }
+
+    public List<Image> getImagesList() {
+
         //TODO: get the folder by global name
-        File picture_folder = new File("/mnt/extSdCard/DCIM/Camera");
+        File picture_folder = new File(mSearchFolder);
         if (picture_folder != null) {
             for (File file : picture_folder.listFiles()) {
                 if (!mFiles.containsKey(file.getName())) {
@@ -59,7 +59,6 @@ public class LocalStorageManager {
                     }
                 });
                 mBitmapLoaderTask.start();
-
             }
         }
 
@@ -69,7 +68,7 @@ public class LocalStorageManager {
 
     public File getFileByFileName(String fileName) {
         File result = null;
-        File picture_folder = new File("/mnt/extSdCard/DCIM/Camera");
+        File picture_folder = new File(mSearchFolder);
         if (picture_folder != null) {
             for (File file : picture_folder.listFiles()) {
                 if (file.getName().equals(fileName)) {

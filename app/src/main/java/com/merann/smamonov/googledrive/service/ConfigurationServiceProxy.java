@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.merann.smamonov.googledrive.model.Configuration;
+
 /**
  * Created by samam_000 on 05.12.2015.
  */
@@ -34,9 +36,8 @@ public class ConfigurationServiceProxy extends ProxyMessageHandler {
             @Override
             public void onIntent(Intent intent) {
                 Log.d(LOG_TAG, "GET_CONFIGURATION_RESPONSE");
-                ConfigurationService.Configuration configuration = (ConfigurationService.Configuration) intent
-                        .getSerializableExtra(ConfigurationService
-                                .Configuration
+                Configuration configuration = (Configuration) intent
+                        .getSerializableExtra(Configuration
                                 .class
                                 .getName());
                 getConfigurationListener.onGetConfiguration(configuration.getFolderName(),
@@ -47,9 +48,8 @@ public class ConfigurationServiceProxy extends ProxyMessageHandler {
             @Override
             public void onIntent(Intent intent) {
                 Log.d(LOG_TAG, "UPDATE_CONFIGURATION_RESPONSE");
-                ConfigurationService.Configuration configuration = (ConfigurationService.Configuration) intent
-                        .getSerializableExtra(ConfigurationService
-                                .Configuration
+                Configuration configuration = (Configuration) intent
+                        .getSerializableExtra(Configuration
                                 .class
                                 .getName());
                 updateConfigurationListener.onUpdateConfiguration(configuration.getFolderName(),
@@ -65,10 +65,9 @@ public class ConfigurationServiceProxy extends ProxyMessageHandler {
 
     public void setConfiguration(String folderName, int syncTime) {
         Log.d(LOG_TAG, "setConfiguration");
-        ConfigurationService.Configuration configuration = new ConfigurationService.Configuration(folderName, syncTime);
+        Configuration configuration = new Configuration(folderName, syncTime);
         sendMessage(createMessage(Message.UPDATE_CONFIGURATION_REQUEST)
-                .putExtra(ConfigurationService
-                                .Configuration
+                .putExtra(Configuration
                                 .class
                                 .getName(),
                         configuration));

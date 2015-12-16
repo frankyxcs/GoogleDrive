@@ -3,6 +3,8 @@ package com.merann.smamonov.googledrive.service;
 import android.content.Context;
 import android.util.Log;
 
+import com.merann.smamonov.googledrive.model.Configuration;
+
 /**
  * Created by sergeym on 03.12.2015.
  */
@@ -32,11 +34,17 @@ public class DriveServiceProxy extends ProxyMessageHandler {
         sendMessage(createMessage(Message.REMOTE_DRIVE_CONNECT_REQUEST));
     }
 
+    public void start()
+    {
+        Log.d(LOG_TAG, "connect");
+        sendMessage(createMessage(Message.REMOTE_DRIVE_START));
+    }
+
     /* business logic */
-    public void handleConfigurationUpdate(ConfigurationService.Configuration newConfiguration) {
+    public void handleConfigurationUpdate(Configuration newConfiguration) {
         Log.d(LOG_TAG, "handleConfigurationUpdate");
         sendMessage(createMessage(Message.REMOTE_DRIVE_CONFIGURATION_UPDATE_NOTIFICATION)
-                .putExtra(ConfigurationService.Configuration.class.getName(), newConfiguration));
+                .putExtra(Configuration.class.getName(), newConfiguration));
     }
 
     public void handleConnectionEstablished() {

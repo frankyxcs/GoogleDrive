@@ -54,7 +54,6 @@ public class DriveService extends BaseService {
         Log.d(LOG_TAG, "DriveService");
     }
 
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -101,13 +100,12 @@ public class DriveService extends BaseService {
 //        });
 //
 //
-//        addMessageHandler(Message.REMOTE_DRIVE_DO_SYNC, new IMessageHandler() {
-//            @Override
-//            public void onIntent(Intent intent) {
-//                Log.d(LOG_TAG, "REMOTE_DRIVE_DO_SYNC");
-//                doSync();
-//            }
-//        });
+        addMessageHandler(Message.REMOTE_DRIVE_START, new IMessageHandler() {
+            @Override
+            public void onIntent(Intent intent) {
+                Log.d(LOG_TAG, "REMOTE_DRIVE_START");
+            }
+        });
 
         mStorageManager = new StorageManager(this,
                 new StorageManager.StorageManagerListener() {
