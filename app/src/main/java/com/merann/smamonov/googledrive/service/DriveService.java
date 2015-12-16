@@ -42,12 +42,18 @@ public class DriveService extends BaseService {
     static public final String INTEND_STRING = "com.merann.smamonov.googledrive.DriveService";
     static private final String LOG_TAG = "DriveService";
 
+    private StorageManager mStorageManager;
+    private Boolean mBinded;
+
     public DriveService() {
         super(LOG_TAG, INTEND_STRING);
+
+        mBinded = false;
+        mStorageManager = null;
+
         Log.d(LOG_TAG, "DriveService");
     }
 
-    StorageManager mStorageManager;
 
     @Override
     public void onCreate() {
@@ -182,8 +188,6 @@ public class DriveService extends BaseService {
     private void onConnectionEstablished() {
         Log.d(LOG_TAG, "onConnectionEstablished");
         sendMessage(createMessage(Message.REMOTE_DRIVE_CONNECT_NOTIFICATION));
-
-
     }
 
 //    private void handleConnectionEstablished() {
@@ -197,8 +201,8 @@ public class DriveService extends BaseService {
 //        sendMessage(createMessage(Message.REMOTE_DRIVE_DISCONNECT_NOTIFICATION));
 //    }
 
-    private void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.e(LOG_TAG, "onConnectionFailed");
+    private void sendNotification(ConnectionResult connectionResult) {
+        Log.e(LOG_TAG, "sendNotification");
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         Notification.Builder notificationBuilder = new Notification.Builder(this);
@@ -229,8 +233,22 @@ public class DriveService extends BaseService {
                 .setAutoCancel(true);
 
         Notification notification = notificationBuilder.build();
-
         notificationManager.notify(1, notification);
+
+    }
+
+    private void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.e(LOG_TAG, "onConnectionFailed");
+
+        if (mBinded) {
+            onConnectionEstablished();
+
+            sendMessage(createMessage(Message.REMOTE_DRIVE_AUTHENTICATION_PERFORM_REQUEST)
+                    .putExtra(ConnectionResult.class.toString(),
+                            connectionResult));
+        } else {
+            sendNotification(connectionResult);
+        }
 
 //        sendMessage(createMessage(Message.REMOTE_DRIVE_AUTHENTICATION_PERFORM_REQUEST)
 //                .putExtra(ConnectionResult.class.toString(),
@@ -275,11 +293,12 @@ public class DriveService extends BaseService {
 
             @Override
             public void onFileUpload(String fileName, boolean isSuccess) {
-
+                Log.d(LOG_TAG, "onFileUpload");
             }
 
             @Override
             public void onConnectionFailed(final ConnectionResult connectionResult) {
+                Log.d(LOG_TAG, "onConnectionFailed");
                 DriveService.this.onConnectionFailed(connectionResult);
             }
 
@@ -300,11 +319,13 @@ public class DriveService extends BaseService {
 
     @Override
     public IBinder onBind(Intent intent) {
+        mBinded = true;
         return new DriveServiceBinder(this);
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
+        mBinded = false;
         return true;
     }
 

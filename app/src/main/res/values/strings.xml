@@ -10,4 +10,5 @@
     <string name="on_drive_connection_failed_data">on_drive_connection_failed_data</string>
     <string name="add_file_activity_caption">Add file</string>
     <string name="home_activity_caption">Remote drive storage</string>
+    <string name="settings_activity_caption">Settings</string>
 </resources>

@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"></uses-permission>
 
     <application
         android:allowBackup="true"
@@ -22,7 +23,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".view.SettingsActivity" />
+        <activity
+            android:name=".view.SettingsActivity"
+            android:label="@string/settings_activity_caption" />
         <activity
             android:name=".view.OpenFileActivity"
             android:label="@string/add_file_activity_caption" />
@@ -40,5 +43,15 @@
 
         <activity android:name=".view.NotificationActivity"></activity>
     </application>
+
+    <receiver
+        android:name=".receiver.DriveBroadcastReceiver"
+        android:enabled="true"
+        android:exported="true"
+        android:label="DriveBroadcastReceiver">
+        <intent-filter>
+            <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+        </intent-filter>
+    </receiver>
 
 </manifest>

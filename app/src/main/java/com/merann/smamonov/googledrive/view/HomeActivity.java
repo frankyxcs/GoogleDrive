@@ -13,10 +13,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.merann.smamonov.googledrive.R;
 import com.merann.smamonov.googledrive.model.Image;
 import com.merann.smamonov.googledrive.service.DriveService;
+import com.merann.smamonov.googledrive.service.DriveServiceProxyForActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +27,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public final String LOG_TAG = "HomeActivity";
 
-    //    DriveServiceProxyForActivity mDriveServiceProxy;
+    DriveServiceProxyForActivity mDriveServiceProxy;
     private static final int OPEN_FILE_DIALOG_REQUEST = 101;
     List<Image> mImages = new ArrayList<>();
     ListViewAdapter mListViewAdapter;
@@ -77,38 +79,37 @@ public class HomeActivity extends AppCompatActivity {
 
         bindService(bindIntent, mServiceConnection, BIND_AUTO_CREATE);
 
-//        mDriveServiceProxy = new DriveServiceProxyForActivity(this,
-//                new DriveServiceProxyForActivity.DriveServiceProxyListener() {
-//
-//                    @Override
-//                    public void onConnectionStateChange(boolean isConneted) {
-//                        Log.d(LOG_TAG, "onConnectionStateChange");
-//                        onServiceConnected(isConneted);
-//                    }
-//
-//                    @Override
-//                    public void onNewFileNotification() {
-//                        Log.d(LOG_TAG, "onNewFileNotification");
-//                        updateImageList();
-//                    }
-//
-//                    @Override
-//                    public void onFileUploadNotification(String fileName, Boolean isSuccess) {
-//                        Log.d(LOG_TAG, "onFileUploadNotification");
-//                        String message;
-//
-//
-//                        if (isSuccess) {
-//                            message = "File " + fileName + " was successfully uploaded";
-//                        } else
-//
-//                        {
-//                            message = "File " + fileName + " upload was failed";
-//                        }
-//                        Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT);
-//                        toast.show();
-//                    }
-//                });
+        mDriveServiceProxy = new DriveServiceProxyForActivity(this,
+                new DriveServiceProxyForActivity.DriveServiceProxyListener() {
+
+                    @Override
+                    public void onConnectionStateChange(boolean isConneted) {
+                        Log.d(LOG_TAG, "onConnectionStateChange");
+                        onServiceConnected(isConneted);
+                    }
+
+                    @Override
+                    public void onNewFileNotification() {
+                        Log.d(LOG_TAG, "onNewFileNotification");
+                        updateImageList();
+                    }
+
+                    @Override
+                    public void onFileUploadNotification(String fileName, Boolean isSuccess) {
+                        Log.d(LOG_TAG, "onFileUploadNotification");
+                        String message;
+
+                        if (isSuccess) {
+                            message = "File " + fileName + " was successfully uploaded";
+                        } else
+
+                        {
+                            message = "File " + fileName + " upload was failed";
+                        }
+                        Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT);
+                        toast.show();
+                    }
+                });
 
         onServiceConnected(false);
     }
@@ -174,40 +175,40 @@ public class HomeActivity extends AppCompatActivity {
     protected void onResume() {
         Log.d(LOG_TAG, "onResume");
         super.onResume();
-//        mDriveServiceProxy.bind();
+        mDriveServiceProxy.bind();
 //        mDriveServiceProxy.connect();
     }
 
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        Log.d(LOG_TAG, "onActivityResult requestCode:" + requestCode + " resultCode:" + resultCode);
-//        if (!mDriveServiceProxy.onActivityResultHandler(requestCode, resultCode, data)) {
-//            switch (requestCode) {
-//                case OPEN_FILE_DIALOG_REQUEST: {
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d(LOG_TAG, "onActivityResult requestCode:" + requestCode + " resultCode:" + resultCode);
+        if (!mDriveServiceProxy.onActivityResultHandler(requestCode, resultCode, data)) {
+            switch (requestCode) {
+                case OPEN_FILE_DIALOG_REQUEST: {
 //                    if (resultCode == RESULT_OK) {
 //                        File file = (File) data.getSerializableExtra(File.class.getName());
 //                        mDriveServiceProxy.uploadFile(file);
 //                    } else {
 //
 //                    }
-//                    break;
-//                }
-//                default:
-//                    Log.e(LOG_TAG, "unable to handle onActivityResult requestCode:"
-//                            + requestCode
-//                            + " resultCode:"
-//                            + resultCode);
-//                    break;
-//            }
-//        }
-//    }
+                    break;
+                }
+                default:
+                    Log.e(LOG_TAG, "unable to handle onActivityResult requestCode:"
+                            + requestCode
+                            + " resultCode:"
+                            + resultCode);
+                    break;
+            }
+        }
+    }
 
     @Override
     protected void onPause() {
         Log.d(LOG_TAG, "onStop");
         super.onPause();
-//        mDriveServiceProxy.unBind();
+        mDriveServiceProxy.unBind();
     }
 
     private void showSettingsActivity() {
