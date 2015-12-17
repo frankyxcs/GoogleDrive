@@ -10,11 +10,11 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.merann.smamonov.googledrive.managers.RemoteStorageManager;
 import com.merann.smamonov.googledrive.managers.StorageManager;
 import com.merann.smamonov.googledrive.model.Image;
 import com.merann.smamonov.googledrive.view.NotificationActivity;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -22,11 +22,26 @@ import java.util.List;
  */
 public class DriveService extends BaseService {
 
-    public class DriveServiceBinder extends Binder {
+    public static class DriveServiceBinder extends Binder {
+
+        interface DriveServiceBinderListener {
+            void onFileUploaded(File file, Boolean isSuccess);
+
+            void onFileListChanged(List<Image> fileList);
+
+            void onSynchronizationStarted();
+
+            void onSynchronisationFinished();
+
+            void onConnectedFailed(ConnectionResult connectionResult);
+        }
+
         DriveService mDriveService;
+        DriveServiceBinderListener mDriveServiceBinderListener;
 
         public DriveServiceBinder(DriveService driveService) {
             super();
+            mDriveServiceBinderListener = null;
             mDriveService = driveService;
         }
 
@@ -37,18 +52,55 @@ public class DriveService extends BaseService {
         public void doSync() {
             mDriveService.doSync();
         }
+
+        public void uploadFile(File file) {
+            mDriveService.uploadFile(file);
+        }
+
+        public void setListener(DriveServiceBinderListener listener) {
+            mDriveServiceBinderListener = listener;
+        }
+
+        void notifyFileUploaded(File file, Boolean isSuccess) {
+            if (mDriveServiceBinderListener != null) {
+                mDriveServiceBinderListener.onFileUploaded(file, isSuccess);
+            }
+        }
+
+        void notifyFileListChanged(List<Image> fileList) {
+            if (mDriveServiceBinderListener != null) {
+                mDriveServiceBinderListener.onFileListChanged(fileList);
+            }
+        }
+
+        void notifySynchronizationStarted() {
+            if (mDriveServiceBinderListener != null) {
+                mDriveServiceBinderListener.onSynchronizationStarted();
+            }
+        }
+
+        void notifySynchronisationFinished() {
+            if (mDriveServiceBinderListener != null) {
+                mDriveServiceBinderListener.onSynchronisationFinished();
+            }
+        }
+
+        void notifyConnectedFailed(ConnectionResult connectionResult) {
+            if (mDriveServiceBinderListener != null) {
+                mDriveServiceBinderListener.onConnectedFailed(connectionResult);
+            }
+        }
     }
 
     static public final String INTEND_STRING = "com.merann.smamonov.googledrive.DriveService";
     static private final String LOG_TAG = "DriveService";
 
     private StorageManager mStorageManager;
-    private Boolean mBinded;
+    private DriveServiceBinder mBinder;
 
     public DriveService() {
         super(LOG_TAG, INTEND_STRING);
 
-        mBinded = false;
         mStorageManager = null;
 
         Log.d(LOG_TAG, "DriveService");
@@ -111,23 +163,21 @@ public class DriveService extends BaseService {
                 new StorageManager.StorageManagerListener() {
                     @Override
                     public void onFilesChanged() {
-                        sendMessage(createMessage(Message.REMOTE_DRIVE_NEW_FILE_NOTIFY));
+                        Log.d(LOG_TAG, "onFilesChanged");
+                    }
+
+                    @Override
+                    public void onFileUpload(File file, boolean isSuccess) {
+                        Log.d(LOG_TAG, "onFileUpload");
+
+                    }
+
+                    @Override
+                    public void onConnectionFailed(ConnectionResult connectionResult) {
+                        Log.d(LOG_TAG, "onConnectionFailed");
+                        DriveService.this.onConnectionFailed(connectionResult);
                     }
                 });
-
-//        RemoteStorageManager.getInstance().setOnNewFileListener(new RemoteStorageManager.RemoteStorageManagerListener() {
-//            @Override
-//            public void onNewFile(String fileName) {
-//                sendMessage(createMessage(Message.REMOTE_DRIVE_NEW_FILE_NOTIFY)
-//                        .putExtra(String.class.getName(), fileName));
-//            }
-//
-//            @Override
-//            public void onFileUpload(String fileName, boolean isSuccess) {
-//                sendMessage(createMessage(Message.REMOTE_DRIVE_UPLOAD_FILE_RESPONSE)
-//                        .putExtra(Boolean.class.getName(), isSuccess));
-//            }
-//        });
     }
 
     @Override
@@ -135,53 +185,6 @@ public class DriveService extends BaseService {
         super.onDestroy();
         mStorageManager = null;
     }
-
-//    /* Business logic */
-//    private void connect() {
-//        Log.d(LOG_TAG, "connect");
-//
-//        if (RemoteStorageManager.getInstance().getCurrentConfiguration() == null) {
-//            Log.d(LOG_TAG, "Connection requested while we have no configuration");
-//            RemoteStorageManager.getInstance().setIsConnectionRequested(true);
-//            getConfiguration();
-//        } else if (RemoteStorageManager.getInstance().getGoogleApiClient() != null) {
-//            if (RemoteStorageManager.getInstance().isConnected()) {
-//                onConnectionEstablished();
-//            } else {
-//                RemoteStorageManager.getInstance().getGoogleApiClient().connect();
-//            }
-//        } else {
-//            Log.d(LOG_TAG, "connect mGoogleApiClient doesn't exists");
-//            RemoteStorageManager.getInstance().setGoogleApiClient(new GoogleApiClient.Builder(this)
-//                    .addApi(Drive.API)
-//                    .addScope(Drive.SCOPE_FILE)
-//                    .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
-//                        @Override
-//                        public void onConnected(Bundle bundle) {
-//                            Log.d(LOG_TAG, "onConnected");
-//                            DriveServiceProxy driveServiceProxy = new DriveServiceProxy(getBaseContext());
-//                            driveServiceProxy.handleConnectionEstablished();
-//                            onConnectionEstablished();
-//                        }
-//
-//                        @Override
-//                        public void onConnectionSuspended(int i) {
-//                            Log.d(LOG_TAG, "onConnectionSuspended");
-//                            onConnectionLost();
-//                        }
-//                    })
-//                    .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
-//                        @Override
-//                        public void onConnectionFailed(ConnectionResult connectionResult) {
-//                            Log.e(LOG_TAG, "onConnectionFailed");
-//                            DriveService.this.onConnectionFailed(connectionResult);
-//                        }
-//                    })
-//                    .build());
-//            Log.d(LOG_TAG, "connect mGoogleApiClient.connect()");
-//            RemoteStorageManager.getInstance().getGoogleApiClient().connect();
-//        }
-//    }
 
     private void onConnectionEstablished() {
         Log.d(LOG_TAG, "onConnectionEstablished");
@@ -235,23 +238,30 @@ public class DriveService extends BaseService {
 
     }
 
+    private void onFileUpload(File file, Boolean isSuccess) {
+        Log.e(LOG_TAG, "onFileUpload");
+        mBinder.notifyFileUploaded(file, isSuccess);
+    }
+
     private void onConnectionFailed(ConnectionResult connectionResult) {
         Log.e(LOG_TAG, "onConnectionFailed");
 
-        if (mBinded) {
-            onConnectionEstablished();
-
-            sendMessage(createMessage(Message.REMOTE_DRIVE_AUTHENTICATION_PERFORM_REQUEST)
-                    .putExtra(ConnectionResult.class.toString(),
-                            connectionResult));
+        if (mBinder != null) {
+            if (connectionResult.hasResolution()) {
+                mBinder.notifyConnectedFailed(connectionResult);
+            } else {
+                Log.e(LOG_TAG,
+                        "onConnectionFailed: RemoteDrive connection was failed:"
+                                + connectionResult.getErrorMessage());
+            }
         } else {
             sendNotification(connectionResult);
         }
+    }
 
 //        sendMessage(createMessage(Message.REMOTE_DRIVE_AUTHENTICATION_PERFORM_REQUEST)
 //                .putExtra(ConnectionResult.class.toString(),
 //                        connectionResult));
-    }
 
 //    private void setupConfiguration(Intent intent) {
 //        Log.d(LOG_TAG, "setupConfiguration");
@@ -271,59 +281,32 @@ public class DriveService extends BaseService {
 //        }
 //    }
 
-//    private void getConfiguration() {
+    //    private void getConfiguration() {
 //        ConfigurationServiceProxy configurationServiceProxy = new ConfigurationServiceProxy(this, null, null, null);
 //        configurationServiceProxy.getConfiguration();
 //    }
 //
-//    private void uploadFile(Intent intent) {
-//        File file = (File) intent.getSerializableExtra(File.class.getName());
-//        Log.d(LOG_TAG, "uploadFile : "
-//                + file.getName());
-//
-//        RemoteStorageManager.getInstance().uploadFileSync(file);
-//    }
+    private void uploadFile(File file) {
+        Log.d(LOG_TAG, "uploadFile : "
+                + file.getName());
+
+        mStorageManager.uploadFile(file);
+    }
 
     private void doSync() {
         Log.d(LOG_TAG, "doSync");
-        RemoteStorageManager remoteStorageManager = new RemoteStorageManager(this, mStorageManager);
-        remoteStorageManager.connect(new RemoteStorageManager.RemoteStorageManagerListener() {
-
-            @Override
-            public void onFileUpload(String fileName, boolean isSuccess) {
-                Log.d(LOG_TAG, "onFileUpload");
-            }
-
-            @Override
-            public void onConnectionFailed(final ConnectionResult connectionResult) {
-                Log.d(LOG_TAG, "onConnectionFailed");
-                DriveService.this.onConnectionFailed(connectionResult);
-            }
-
-            @Override
-            public void onConnectionEstablished() {
-                Log.d(LOG_TAG, "onConnected");
-                DriveServiceProxy driveServiceProxy = new DriveServiceProxy(getBaseContext());
-                driveServiceProxy.handleConnectionEstablished();
-                DriveService.this.onConnectionEstablished();
-            }
-
-            @Override
-            public void onConnectionSuspended() {
-                Log.d(LOG_TAG, "onConnectionSuspended");
-            }
-        });
+        mStorageManager.doSync();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        mBinded = true;
-        return new DriveServiceBinder(this);
+        mBinder = new DriveServiceBinder(this);
+        return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        mBinded = false;
+        mBinder = null;
         return true;
     }
 

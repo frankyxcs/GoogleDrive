@@ -16,7 +16,6 @@ public class DriveServiceProxy extends ProxyMessageHandler {
         super(context, LOG_TAG, DriveService.INTEND_STRING);
         Log.d(LOG_TAG, "DriveServiceProxy");
         mContext = context;
-        Log.d(LOG_TAG, "DriveServiceProxy");
     }
 
     public void bind() {
@@ -27,11 +26,6 @@ public class DriveServiceProxy extends ProxyMessageHandler {
     public void unBind() {
         Log.d(LOG_TAG, "unBind");
         super.unBind();
-    }
-
-    public void connect() {
-        Log.d(LOG_TAG, "connect");
-        sendMessage(createMessage(Message.REMOTE_DRIVE_CONNECT_REQUEST));
     }
 
     public void start()

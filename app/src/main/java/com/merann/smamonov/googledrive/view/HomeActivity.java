@@ -1,10 +1,7 @@
 package com.merann.smamonov.googledrive.view;
 
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -17,9 +14,9 @@ import android.widget.Toast;
 
 import com.merann.smamonov.googledrive.R;
 import com.merann.smamonov.googledrive.model.Image;
-import com.merann.smamonov.googledrive.service.DriveService;
 import com.merann.smamonov.googledrive.service.DriveServiceProxyForActivity;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,8 +28,6 @@ public class HomeActivity extends AppCompatActivity {
     private static final int OPEN_FILE_DIALOG_REQUEST = 101;
     List<Image> mImages = new ArrayList<>();
     ListViewAdapter mListViewAdapter;
-    DriveService.DriveServiceBinder mDriveServiceBinder;
-    ServiceConnection mServiceConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,48 +42,37 @@ public class HomeActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                /*
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                openFileDialog();
-                            }
-                        }).show();*/
                 openFileDialog();
             }
         });
 
-        updateImageList();
-        updateListView();
-
-        mServiceConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                Log.d(LOG_TAG, "onServiceConnected");
-                mDriveServiceBinder = (DriveService.DriveServiceBinder) service;
-                HomeActivity.this.onServiceConnected(true);
-
-                mImages = mDriveServiceBinder.getImagesList();
-
-                for (Image image: mImages)
-                {
-                    Log.e(LOG_TAG, image.getFileName());
-                }
-
-                updateListView();
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                Log.d(LOG_TAG, "onServiceConnected");
-                HomeActivity.this.onServiceConnected(false);
-            }
-        };
-
-        Intent bindIntent = new Intent(DriveService.INTEND_STRING);
-
-        bindService(bindIntent, mServiceConnection, BIND_AUTO_CREATE);
+//        mServiceConnection = new ServiceConnection() {
+//            @Override
+//            public void onServiceConnected(ComponentName name, IBinder service) {
+//                Log.d(LOG_TAG, "onServiceConnected");
+//                mDriveServiceBinder = (DriveService.DriveServiceBinder) service;
+//                HomeActivity.this.onServiceConnected(true);
+//
+//                mImages = mDriveServiceBinder.getImagesList();
+//
+//                for (Image image: mImages)
+//                {
+//                    Log.e(LOG_TAG, image.getFileName());
+//                }
+//
+//                updateListView();
+//            }
+//
+//            @Override
+//            public void onServiceDisconnected(ComponentName name) {
+//                Log.d(LOG_TAG, "onServiceConnected");
+//                HomeActivity.this.onServiceConnected(false);
+//            }
+//        };
+//
+//        Intent bindIntent = new Intent(DriveService.INTEND_STRING);
+//
+//        bindService(bindIntent, mServiceConnection, BIND_AUTO_CREATE);
 
         mDriveServiceProxy = new DriveServiceProxyForActivity(this,
                 new DriveServiceProxyForActivity.DriveServiceProxyListener() {
@@ -128,7 +112,7 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(mServiceConnection);
+        mDriveServiceProxy.unBind();
     }
 
     private void updateListView() {
@@ -142,6 +126,10 @@ public class HomeActivity extends AppCompatActivity {
     protected void onStart() {
         Log.d(LOG_TAG, "onStart");
         super.onStart();
+        mDriveServiceProxy.bind();
+
+ //       updateImageList();
+        updateListView();
     }
 
     @Override
@@ -158,15 +146,17 @@ public class HomeActivity extends AppCompatActivity {
 
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Log.d(LOG_TAG, "onOptionsItemSelected: action_settings");
-            showSettingsActivity();
-            return true;
-        } else if (id == R.id.action_sync) {
-            Log.d(LOG_TAG, "onOptionsItemSelected: action_sync");
-            mDriveServiceBinder.doSync();
-            return true;
+        switch (id) {
+            case R.id.action_settings:
+                Log.d(LOG_TAG, "onOptionsItemSelected: action_settings");
+                showSettingsActivity();
+                break;
+            case R.id.action_sync:
+                Log.d(LOG_TAG, "onOptionsItemSelected: action_sync");
+                mDriveServiceProxy.doSync();
+                break;
+            default:
+                break;
         }
 
         return super.onOptionsItemSelected(item);
@@ -186,7 +176,6 @@ public class HomeActivity extends AppCompatActivity {
     protected void onResume() {
         Log.d(LOG_TAG, "onResume");
         super.onResume();
-        mDriveServiceProxy.bind();
 //        mDriveServiceProxy.connect();
     }
 
@@ -197,12 +186,15 @@ public class HomeActivity extends AppCompatActivity {
         if (!mDriveServiceProxy.onActivityResultHandler(requestCode, resultCode, data)) {
             switch (requestCode) {
                 case OPEN_FILE_DIALOG_REQUEST: {
-//                    if (resultCode == RESULT_OK) {
-//                        File file = (File) data.getSerializableExtra(File.class.getName());
-//                        mDriveServiceProxy.uploadFile(file);
-//                    } else {
-//
-//                    }
+                    switch (resultCode) {
+                        case RESULT_OK:
+                            Log.d(LOG_TAG, "onActivityResult: OPEN_FILE_DIALOG_REQUEST : RESULT_OK");
+                            File file = (File) data.getSerializableExtra(File.class.getName());
+                            mDriveServiceProxy.uploadFile(file);
+                            break;
+                        default:
+                            break;
+                    }
                     break;
                 }
                 default:
@@ -219,7 +211,7 @@ public class HomeActivity extends AppCompatActivity {
     protected void onPause() {
         Log.d(LOG_TAG, "onStop");
         super.onPause();
-        mDriveServiceProxy.unBind();
+        //mDriveServiceProxy.unBind();
     }
 
     private void showSettingsActivity() {
@@ -235,7 +227,7 @@ public class HomeActivity extends AppCompatActivity {
 
     private void updateImageList() {
         Log.d(LOG_TAG, "updateImageList");
-        //mImages = RemoteStorageManager.getInstance().getImagesList();
+        mImages = mDriveServiceProxy.getImagesList();
         updateListView();
     }
 }

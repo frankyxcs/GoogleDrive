@@ -43,21 +43,13 @@ import java.util.List;
 
 public class RemoteStorageManager {
 
-    public interface RemoteStorageManagerListener {
-//        void onNewFile(String fileName, Bitmap icon);
-
-        void onFileUpload(String fileName, boolean isSuccess);
-
-        void onConnectionFailed(ConnectionResult connectionResult);
-
-        void onConnectionEstablished();
-
-        void onConnectionSuspended();
-    }
-
-    private class RemoteFileFile {
+    public class RemoteDriveFile extends Image {
         Metadata mMetadata;
-        Bitmap mBitmap;
+
+        public RemoteDriveFile(Metadata metadata) {
+            super(metadata.getTitle());
+            this.mMetadata = metadata;
+        }
 
         public Metadata getMetadata() {
             return mMetadata;
@@ -67,45 +59,43 @@ public class RemoteStorageManager {
             this.mMetadata = mMetadata;
         }
 
-        public Bitmap getBitmap() {
-            return mBitmap;
-        }
-
-        public void setBitmap(Bitmap mBitmap) {
-            this.mBitmap = mBitmap;
-        }
-
-        public RemoteFileFile(Metadata metadata) {
-            this.mMetadata = metadata;
-        }
-
         public Image getImage() {
             return new Image(getMetadata().getTitle(),
                     getBitmap());
         }
     }
 
+    public interface RemoteStorageManagerListener {
+
+        void onFileUpload(File file, boolean isSuccess);
+
+        void onConnectionFailed(ConnectionResult connectionResult);
+
+        void onConnectionEstablished();
+
+        void onConnectionSuspended();
+
+        void onNewFileDetected(RemoteDriveFile file);
+    }
+
+
     private final static String LOG_TAG = "RemoteStorageManager";
 
     private Context mContext;
-    private StorageManager mStorageManager;
     private GoogleApiClient mGoogleApiClient;
     Configuration mCurrentConfiguration;
-    private List<RemoteFileFile> mFiles = new ArrayList<>();
+    private List<RemoteDriveFile> mFiles = new ArrayList<>();
     boolean mIsConnectionRequested;
     DriveFolder mDriveFolder;
     RemoteStorageManagerListener mRemoteStorageManagerListener;
     ChangeListener mChangeListener;
 
-    public RemoteStorageManager(Context context, StorageManager storageManager) {
+    public RemoteStorageManager(Context context,
+                                RemoteStorageManagerListener remoteStorageManagerListener) {
         mContext = context;
-        mStorageManager = storageManager;
+        mRemoteStorageManagerListener = remoteStorageManagerListener;
         ConfigurationManager configurationManager = new ConfigurationManager(mContext);
         mCurrentConfiguration = configurationManager.getConfiguration();
-    }
-
-    public boolean isConnectionRequested() {
-        return mIsConnectionRequested;
     }
 
 //    public void setIsConnectionRequested(boolean isConnectionRequested) {
@@ -138,7 +128,7 @@ public class RemoteStorageManager {
 
     public Bitmap getImageByFilename(String fileName) {
         Bitmap result = null;
-        for (RemoteFileFile file : mFiles) {
+        for (RemoteDriveFile file : mFiles) {
             if (file.getMetadata().getTitle().equals(fileName)) {
                 result = file.getBitmap();
             }
@@ -178,7 +168,6 @@ public class RemoteStorageManager {
                     + " reason: "
                     + driveFolderResult.getStatus().getStatusMessage());
         }
-
     }
 
     void createFolderAsync(final String newFolderName) {
@@ -234,11 +223,11 @@ public class RemoteStorageManager {
                 Metadata metadata = metadataBuffer.get(index);
                 printFileInfo(metadata);
 
-                RemoteFileFile file = new RemoteFileFile(metadata);
+                RemoteDriveFile file = new RemoteDriveFile(metadata);
 
                 mFiles.add(file);
 
-                mStorageManager.addRemoteImage(file.getImage());
+                mRemoteStorageManagerListener.onNewFileDetected(file);
             }
         }
     }
@@ -284,7 +273,7 @@ public class RemoteStorageManager {
                          index++) {
                         Metadata metadata = metadataBuffer.get(index);
                         printFileInfo(metadata);
-                        mFiles.add(new RemoteFileFile(metadata));
+                        mFiles.add(new RemoteDriveFile(metadata));
                     }
                 }
             }
@@ -373,7 +362,7 @@ public class RemoteStorageManager {
         }
     }
 
-    public void getFilesAsync() {
+    public void getFileListAsync() {
         prepareGetUserFolderRequest()
                 .setResultCallback(new ResultCallback<DriveApi.MetadataBufferResult>() {
                     @Override
@@ -390,7 +379,7 @@ public class RemoteStorageManager {
     }
 
 
-    public void getFilesSync() {
+    public void getFileListSync() {
         DriveApi.MetadataBufferResult searchResult = prepareGetUserFolderRequest().await();
         handleGetUserFolderResult(searchResult);
 
@@ -399,7 +388,6 @@ public class RemoteStorageManager {
         } else {
             createFolderSync(mCurrentConfiguration.getFolderName());
         }
-
     }
 
     private PendingResult<DriveApi.MetadataBufferResult> prepareGetUserFolderRequest() {
@@ -463,7 +451,7 @@ public class RemoteStorageManager {
                     driveFileResult.getStatus().getStatusMessage());
         }
 
-        mRemoteStorageManagerListener.onFileUpload(file.getName(), result);
+        mRemoteStorageManagerListener.onFileUpload(file, result);
     }
 
     public void uploadFileSync(final File file) {
@@ -501,18 +489,18 @@ public class RemoteStorageManager {
     }
 
     private void downloadFilesSync() {
-        for (RemoteFileFile file : mFiles) {
+        for (RemoteDriveFile file : mFiles) {
             downloadFileSync(file);
         }
     }
 
     private void downloadFilesAsync() {
-        for (RemoteFileFile file : mFiles) {
+        for (RemoteDriveFile file : mFiles) {
             downloadFileAsync(file);
         }
     }
 
-    private void handleRemoteFileDownloadProgress(final RemoteFileFile file,
+    private void handleRemoteFileDownloadProgress(final RemoteDriveFile file,
                                                   long downloadedBytes,
                                                   long totalBytes) {
         Log.d(LOG_TAG, "handleRemoteFileDownloadProgress: " + file.getMetadata().getTitle()
@@ -522,7 +510,7 @@ public class RemoteStorageManager {
                 + totalBytes);
     }
 
-    private PendingResult<DriveApi.DriveContentsResult> prepareOpenRemoteFileRequest(final RemoteFileFile file) {
+    private PendingResult<DriveApi.DriveContentsResult> prepareOpenRemoteFileRequest(final RemoteDriveFile file) {
         Log.d(LOG_TAG, "prepareOpenRemoteFileRequest: " + file.getMetadata().getTitle());
 
         DriveId driveId = file.getMetadata().getDriveId();
@@ -539,7 +527,7 @@ public class RemoteStorageManager {
                 });
     }
 
-    private BitmapFactory.Options handleOpenRemoteFileResponseToGetImageOptions(final RemoteFileFile file,
+    private BitmapFactory.Options handleOpenRemoteFileResponseToGetImageOptions(final RemoteDriveFile file,
                                                                                 DriveApi.DriveContentsResult driveContentsResult) {
         Log.d(LOG_TAG, "handleOpenRemoteFileResponse: " + file.getMetadata().getTitle());
 
@@ -560,7 +548,7 @@ public class RemoteStorageManager {
         return result;
     }
 
-    private Bitmap handleOpenRemoteFileResponseToLoadFile(final RemoteFileFile file,
+    private Bitmap handleOpenRemoteFileResponseToLoadFile(final RemoteDriveFile file,
                                                           DriveApi.DriveContentsResult driveContentsResult,
                                                           BitmapFactory.Options bitmapOptions) {
         Bitmap result = null;
@@ -580,7 +568,7 @@ public class RemoteStorageManager {
         return result;
     }
 
-    private void downloadFileSync(final RemoteFileFile file) {
+    private void downloadFileSync(final RemoteDriveFile file) {
         Log.d(LOG_TAG, "downloadFileSync: " + file.getMetadata().getTitle());
         DriveApi.DriveContentsResult driveContentsResult = prepareOpenRemoteFileRequest(file).await();
 
@@ -597,7 +585,7 @@ public class RemoteStorageManager {
         }
     }
 
-    private void downloadFileAsync(final RemoteFileFile file) {
+    private void downloadFileAsync(final RemoteDriveFile file) {
         prepareOpenRemoteFileRequest(file)
                 .setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
                     @Override
@@ -626,7 +614,7 @@ public class RemoteStorageManager {
                 });
     }
 
-    private void onImageLoaded(final RemoteFileFile file,
+    private void onImageLoaded(final RemoteDriveFile file,
                                Bitmap bitmap) {
         Log.d(LOG_TAG, "onImageLoaded:"
                 + file.getMetadata().getTitle()
@@ -635,13 +623,13 @@ public class RemoteStorageManager {
 
         file.setBitmap(bitmap);
 
-        mStorageManager.addRemoteImage(file.getImage());
+        mRemoteStorageManagerListener.onNewFileDetected(file);
     }
 
     public List<Image> getImagesList() {
         List<Image> result = new ArrayList<>();
 
-        for (RemoteFileFile remoteFileFile : mFiles) {
+        for (RemoteDriveFile remoteFileFile : mFiles) {
             result.add(new Image(remoteFileFile.getMetadata().getTitle(),
                     remoteFileFile.getBitmap()));
         }
@@ -714,12 +702,12 @@ public class RemoteStorageManager {
         }
     }
 
-    public void connect(final RemoteStorageManagerListener remoteStorageManagerListener) {
+    public void connect() {
         Log.d(LOG_TAG, "connect");
 
         if (mGoogleApiClient != null) {
             if (isConnected()) {
-                remoteStorageManagerListener.onConnectionEstablished();
+                mRemoteStorageManagerListener.onConnectionEstablished();
             } else {
                 mGoogleApiClient.connect();
             }
@@ -732,21 +720,21 @@ public class RemoteStorageManager {
                         @Override
                         public void onConnected(Bundle bundle) {
                             Log.d(LOG_TAG, "onConnected");
-                            remoteStorageManagerListener.onConnectionEstablished();
-                            getFilesAsync();
+                            mRemoteStorageManagerListener.onConnectionEstablished();
+                            getFileListAsync();
                         }
 
                         @Override
                         public void onConnectionSuspended(int i) {
                             Log.d(LOG_TAG, "onConnectionSuspended");
-                            remoteStorageManagerListener.onConnectionSuspended();
+                            mRemoteStorageManagerListener.onConnectionSuspended();
                         }
                     })
                     .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                         @Override
                         public void onConnectionFailed(ConnectionResult connectionResult) {
                             Log.e(LOG_TAG, "onConnectionFailed");
-                            remoteStorageManagerListener.onConnectionFailed(connectionResult);
+                            mRemoteStorageManagerListener.onConnectionFailed(connectionResult);
                         }
                     })
                     .build();

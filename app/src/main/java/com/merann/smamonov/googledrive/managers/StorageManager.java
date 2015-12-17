@@ -3,8 +3,10 @@ package com.merann.smamonov.googledrive.managers;
 import android.content.Context;
 import android.util.Log;
 
+import com.google.android.gms.common.ConnectionResult;
 import com.merann.smamonov.googledrive.model.Image;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,20 +17,27 @@ import java.util.List;
 public class StorageManager {
 
     public interface StorageManagerListener {
+
         void onFilesChanged();
+
+        void onFileUpload(File file, boolean isSuccess);
+
+        void onConnectionFailed(ConnectionResult connectionResult);
     }
 
     private final static String LOG_TAG = "StorageManager";
 
     private HashMap<String, Image> mImages;
     private Context mContext;
+
     private StorageManagerListener mStorageManagerListener;
+    private RemoteStorageManager mRemoteStorageManager;
 
     private DiskCacheHelper mDiskCacheHelper;
     private DataBaseHelper mDataBaseHelper;
 
     public StorageManager(Context context,
-                          StorageManagerListener storageManagerListener) {
+                          final StorageManagerListener storageManagerListener) {
 
         Log.d(LOG_TAG, "StorageManager");
 
@@ -36,6 +45,37 @@ public class StorageManager {
         mStorageManagerListener = storageManagerListener;
         mDiskCacheHelper = new DiskCacheHelper(mContext);
         mDataBaseHelper = new DataBaseHelper(mContext);
+        mImages = new HashMap();
+
+        mRemoteStorageManager = new RemoteStorageManager(context, new RemoteStorageManager.RemoteStorageManagerListener() {
+            @Override
+            public void onFileUpload(File file, boolean isSuccess) {
+                Log.d(LOG_TAG, "onFileUpload");
+                storageManagerListener.onFileUpload(file, isSuccess);
+            }
+
+            @Override
+            public void onConnectionFailed(ConnectionResult connectionResult) {
+                Log.d(LOG_TAG, "onConnectionFailed");
+                storageManagerListener.onConnectionFailed(connectionResult);
+            }
+
+            @Override
+            public void onConnectionEstablished() {
+                Log.d(LOG_TAG, "onConnectionEstablished");
+            }
+
+            @Override
+            public void onConnectionSuspended() {
+                Log.d(LOG_TAG, "onConnectionSuspended");
+            }
+
+            @Override
+            public void onNewFileDetected(RemoteStorageManager.RemoteDriveFile file) {
+                Log.d(LOG_TAG, "onNewFileDetected");
+                addRemoteImage(file);
+            }
+        });
 
         loadLocalImages();
     }
@@ -44,8 +84,6 @@ public class StorageManager {
 
         Log.d(LOG_TAG, "loadLocalImages");
 
-        mImages = new HashMap();
-
         List<Image> localImages = mDataBaseHelper.getImagesFromDb();
 
         for (Image image : localImages) {
@@ -53,30 +91,33 @@ public class StorageManager {
                     + image.getFileName());
             mImages.put(image.getFileName(), image);
         }
+
+        mStorageManagerListener.onFilesChanged();
     }
 
-    public void addRemoteImage(Image remoteImage) {
+    public void addRemoteImage(RemoteStorageManager.RemoteDriveFile file) {
+        Log.d(LOG_TAG, "addRemoteImage");
 
-        if (mImages.containsKey(remoteImage.getFileName())) {
-            if (remoteImage.getBitmap() != null
-                    && mDiskCacheHelper.getCachedIcon(remoteImage.getFileName()) == null) {
+        if (mImages.containsKey(file.getFileName())) {
+            if (file.getBitmap() != null
+                    && mDiskCacheHelper.getCachedIcon(file.getFileName()) == null) {
                 // save icon to disk cache
-                mDiskCacheHelper.saveIconToFile(remoteImage.getFileName(),
-                        remoteImage.getBitmap());
+                mDiskCacheHelper.saveIconToFile(file.getFileName(),
+                        file.getBitmap());
 
                 // notify about new file/icon
                 mStorageManagerListener.onFilesChanged();
             }
         } else {
             // add remote image to database and load save icon in on disk cache
-            mDataBaseHelper.addImage(remoteImage);
-            if (remoteImage.getBitmap() != null) {
-                mDiskCacheHelper.saveIconToFile(remoteImage.getFileName(),
-                        remoteImage.getBitmap());
+            mDataBaseHelper.addImage(file);
+            if (file.getBitmap() != null) {
+                mDiskCacheHelper.saveIconToFile(file.getFileName(),
+                        file.getBitmap());
             }
 
             // update files map
-            mImages.put(remoteImage.getFileName(), remoteImage);
+            mImages.put(file.getFileName(), file);
 
             // notify about new file/icon
             mStorageManagerListener.onFilesChanged();
@@ -84,7 +125,19 @@ public class StorageManager {
     }
 
     public List<Image> getImages() {
-        return new ArrayList<Image>(mImages.values());
+        Log.d(LOG_TAG, "getImages");
+        return new ArrayList(mImages.values());
     }
+
+    public void doSync() {
+        Log.d(LOG_TAG, "doSync");
+        mRemoteStorageManager.connect();
+    }
+
+    public void uploadFile(File file) {
+        Log.d(LOG_TAG, "uploadFile");
+        mRemoteStorageManager.uploadFileAsync(file);
+    }
+
 
 }
