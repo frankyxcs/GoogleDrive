@@ -562,7 +562,7 @@ public class RemoteStorageManager {
         return result;
     }
 
-    private void downloadFileSync(final RemoteDriveFile file) {
+    public void downloadFileSync(final RemoteDriveFile file) {
         Log.d(LOG_TAG, "downloadFileSync: " + file.getMetadata().getTitle());
         DriveApi.DriveContentsResult driveContentsResult = prepareOpenRemoteFileRequest(file).await();
 
@@ -579,7 +579,7 @@ public class RemoteStorageManager {
         }
     }
 
-    private void downloadFileAsync(final RemoteDriveFile file) {
+    public void downloadFileAsync(final RemoteDriveFile file) {
         prepareOpenRemoteFileRequest(file)
                 .setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
                     @Override
@@ -616,7 +616,6 @@ public class RemoteStorageManager {
                 + bitmap.getByteCount());
 
         file.setBitmap(bitmap);
-
         mRemoteStorageManagerListener.onNewFileDetected(file);
     }
 

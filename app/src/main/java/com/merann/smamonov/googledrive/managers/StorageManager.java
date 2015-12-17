@@ -57,13 +57,13 @@ public class StorageManager {
             @Override
             public void onFileUpload(File file, boolean isSuccess) {
                 Log.d(LOG_TAG, "onFileUpload");
-                storageManagerListener.onFileUpload(file, isSuccess);
+                mStorageManagerListener.onFileUpload(file, isSuccess);
             }
 
             @Override
             public void onConnectionFailed(ConnectionResult connectionResult) {
                 Log.d(LOG_TAG, "onConnectionFailed");
-                storageManagerListener.onConnectionFailed(connectionResult);
+                mStorageManagerListener.onConnectionFailed(connectionResult);
             }
 
             @Override
@@ -123,8 +123,7 @@ public class StorageManager {
                     }
                 });
 
-        for (Image image : mImages.values())
-        {
+        for (Image image : mImages.values()) {
             File iconCache = localStorageManager.getFileByFileName(image.getFileName());
             image.setBitmap(ImageService.loadIcon(iconCache));
             mStorageManagerListener.onFilesChanged();
@@ -140,9 +139,6 @@ public class StorageManager {
                 // save icon to disk cache
                 mDiskCacheHelper.saveIconToFile(file.getFileName(),
                         file.getBitmap());
-
-                // notify about new file/icon
-                mStorageManagerListener.onFilesChanged();
             }
         } else {
             // add remote image to database and load save icon in on disk cache
@@ -150,14 +146,17 @@ public class StorageManager {
             if (file.getBitmap() != null) {
                 mDiskCacheHelper.saveIconToFile(file.getFileName(),
                         file.getBitmap());
+            } else {
+                //download remote file bitmap
+                mRemoteStorageManager.downloadFileAsync(file);
             }
 
             // update files map
             mImages.put(file.getFileName(), file);
-
-            // notify about new file/icon
-            mStorageManagerListener.onFilesChanged();
         }
+
+        // notify about new file/icon
+        mStorageManagerListener.onFilesChanged();
     }
 
     public List<Image> getImages() {

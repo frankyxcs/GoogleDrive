@@ -56,12 +56,14 @@ public class LocalStorageManager {
     private Thread mBitmapLoaderTask;
     private BitmapLoadedListener mBitmapLoadedListener;
     private String mSearchFolder;
+    private Boolean isStopped;
 
     public LocalStorageManager(Context context,
                                IMAGE_FOLDER folderType,
                                BitmapLoadedListener bitmapLoadedListener) {
         mBitmapLoadedListener = bitmapLoadedListener;
         mSearchFolder = getImageFolderPath(context, folderType);
+        isStopped = false;
     }
 
     public List<Image> getImagesList() {
@@ -92,7 +94,8 @@ public class LocalStorageManager {
 
                     @Override
                     public void run() {
-                        while (!mImagesToBeLoaded.isEmpty()) {
+                        while (!isStopped &&
+                                !mImagesToBeLoaded.isEmpty()) {
                             Image image = mImagesToBeLoaded.poll();
                             File file = getFileByFileName(image.getFileName());
                             image.setBitmap(ImageService.loadIcon(file));
@@ -111,7 +114,9 @@ public class LocalStorageManager {
     }
 
     public File getFileByFileName(String fileName) {
-        Log.d(LOG_TAG, "getFileByFileName");
+        Log.d(LOG_TAG,
+                "getFileByFileName: "
+                        + fileName);
 
         File result = null;
         File picture_folder = new File(mSearchFolder);
@@ -124,5 +129,10 @@ public class LocalStorageManager {
             }
         }
         return result;
+    }
+
+    public void stopLoading() {
+        Log.d(LOG_TAG, "stopLoading");
+        isStopped = true;
     }
 }

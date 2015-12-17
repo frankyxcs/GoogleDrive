@@ -20,6 +20,7 @@ public class OpenFileActivity extends AppCompatActivity {
 
     public final String LOG_TAG = "OpenFileActivity";
     private ListViewAdapter mListViewAdapter;
+    private LocalStorageManager mLocalStorageManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +30,7 @@ public class OpenFileActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_open_file);
 
-        final LocalStorageManager localStorageManager
+        mLocalStorageManager
                 = new LocalStorageManager(this,
                 LocalStorageManager.IMAGE_FOLDER.IMAGE_FOLDER_CAMERA,
                 new LocalStorageManager.BitmapLoadedListener() {
@@ -45,7 +46,7 @@ public class OpenFileActivity extends AppCompatActivity {
                 });
 
         final ListView listView = (ListView) findViewById(R.id.listView);
-        mListViewAdapter = new ListViewAdapter(this, localStorageManager.getImagesList());
+        mListViewAdapter = new ListViewAdapter(this, mLocalStorageManager.getImagesList());
 
         listView.setAdapter(mListViewAdapter);
 
@@ -57,10 +58,11 @@ public class OpenFileActivity extends AppCompatActivity {
 
                                                 Log.d(LOG_TAG, "onItemClick position:" + position);
                                                 Image image = (Image) parent.getItemAtPosition(position);
-                                                File file = localStorageManager.getFileByFileName(image.getFileName());
+                                                File file = mLocalStorageManager.getFileByFileName(image.getFileName());
                                                 Intent intent = new Intent();
                                                 intent.putExtra(File.class.getName(), file);
                                                 setResult(RESULT_OK, intent);
+                                                mLocalStorageManager.stopLoading();
                                                 finish();
                                             }
                                         }
@@ -69,8 +71,16 @@ public class OpenFileActivity extends AppCompatActivity {
     }
 
     private void updateListView() {
+        Log.d(LOG_TAG, "updateListView");
         if (mListViewAdapter != null) {
             mListViewAdapter.notifyDataSetChanged();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d(LOG_TAG, "onDestroy");
+        super.onDestroy();
+        mLocalStorageManager.stopLoading();
     }
 }

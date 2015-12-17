@@ -27,7 +27,7 @@ public class DriveService extends BaseService {
         interface DriveServiceBinderListener {
             void onFileUploaded(File file, Boolean isSuccess);
 
-            void onFileListChanged(List<Image> fileList);
+            void onFileListChanged();
 
             void onSynchronizationStarted();
 
@@ -72,9 +72,9 @@ public class DriveService extends BaseService {
             }
         }
 
-        void notifyFileListChanged(List<Image> fileList) {
+        void notifyFileListChanged() {
             if (mDriveServiceBinderListener != null) {
-                mDriveServiceBinderListener.onFileListChanged(fileList);
+                mDriveServiceBinderListener.onFileListChanged();
             }
         }
 
@@ -169,6 +169,10 @@ public class DriveService extends BaseService {
                     @Override
                     public void onFilesChanged() {
                         Log.d(LOG_TAG, "onFilesChanged");
+                        if(mBinder != null) {
+                            mBinder.notifyFileListChanged();
+                        }
+
                     }
 
                     @Override

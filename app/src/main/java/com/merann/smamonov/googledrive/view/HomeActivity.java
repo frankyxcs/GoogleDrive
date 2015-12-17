@@ -81,12 +81,6 @@ public class HomeActivity extends AppCompatActivity {
         onServiceConnected(false);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mDriveServiceProxy.unBind();
-    }
-
     private void updateListView() {
         Log.d(LOG_TAG, "updateListView");
         ListView listView = (ListView) findViewById(R.id.listView);
@@ -95,11 +89,18 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        Log.d(LOG_TAG, "onStart");
-        super.onStart();
+    protected void onResume() {
+        Log.d(LOG_TAG, "onResume");
+        super.onResume();
         mDriveServiceProxy.bind();
         updateListView();
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d(LOG_TAG, "onPause");
+        super.onPause();
+        mDriveServiceProxy.unBind();
     }
 
     @Override
@@ -111,7 +112,6 @@ public class HomeActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         Log.d(LOG_TAG, "onOptionsItemSelected");
 
         int id = item.getItemId();
@@ -143,13 +143,6 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        Log.d(LOG_TAG, "onResume");
-        super.onResume();
-//        mDriveServiceProxy.connect();
-    }
-
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d(LOG_TAG, "onActivityResult requestCode:" + requestCode + " resultCode:" + resultCode);
@@ -175,13 +168,6 @@ public class HomeActivity extends AppCompatActivity {
                     break;
             }
         }
-    }
-
-    @Override
-    protected void onPause() {
-        Log.d(LOG_TAG, "onStop");
-        super.onPause();
-        //mDriveServiceProxy.unBind();
     }
 
     private void showSettingsActivity() {
