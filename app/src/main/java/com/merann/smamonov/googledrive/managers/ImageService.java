@@ -13,34 +13,34 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
-interface ImageLoaderListener {
-    void onLoadComplete(Bitmap bitmap);
-}
+//interface ImageLoaderListener {
+//    void onLoadComplete(Bitmap bitmap);
+//}
 
 public class ImageService {
 
     private final static String LOG_TAG = "ImageService";
 
-    public static void loadFullImage(final InputStream inputStream,
-                                     final ImageLoaderListener imageLoaderListener) {
-        Log.d(LOG_TAG, "loadFullImage");
-
-        AsyncTask task = new AsyncTask<Void, Void, Void>() {
-            Bitmap mResult;
-
-            @Override
-            protected Void doInBackground(Void... params) {
-                mResult = loadImage(inputStream);
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-                imageLoaderListener.onLoadComplete(mResult);
-            }
-        }.execute();
-    }
+//    public static void loadFullImage(final InputStream inputStream,
+//                                     final ImageLoaderListener imageLoaderListener) {
+//        Log.d(LOG_TAG, "loadFullImage");
+//
+//        AsyncTask task = new AsyncTask<Void, Void, Void>() {
+//            Bitmap mResult;
+//
+//            @Override
+//            protected Void doInBackground(Void... params) {
+//                mResult = loadImage(inputStream);
+//                return null;
+//            }
+//
+//            @Override
+//            protected void onPostExecute(Void aVoid) {
+//                super.onPostExecute(aVoid);
+//                imageLoaderListener.onLoadComplete(mResult);
+//            }
+//        }.execute();
+//    }
 /*
     public static void loadIconImage(final InputStream inputStream,
                                      final ImageLoaderListener imageLoaderListener) {

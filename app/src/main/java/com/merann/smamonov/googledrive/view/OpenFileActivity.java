@@ -11,8 +11,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.merann.smamonov.googledrive.R;
-import com.merann.smamonov.googledrive.model.Image;
 import com.merann.smamonov.googledrive.managers.LocalStorageManager;
+import com.merann.smamonov.googledrive.model.Image;
 
 import java.io.File;
 
@@ -30,7 +30,8 @@ public class OpenFileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_open_file);
 
         final LocalStorageManager localStorageManager
-                = new LocalStorageManager(LocalStorageManager.MEDIA_STORAGE,
+                = new LocalStorageManager(this,
+                LocalStorageManager.IMAGE_FOLDER.IMAGE_FOLDER_CAMERA,
                 new LocalStorageManager.BitmapLoadedListener() {
                     @Override
                     public void onBitmapLoaded(String fileName) {

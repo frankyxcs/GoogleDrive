@@ -2,7 +2,6 @@ package com.merann.smamonov.googledrive.view;
 
 import android.app.Activity;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -93,17 +92,9 @@ public class ListViewAdapter extends BaseAdapter {
                         View convertView,
                         ViewGroup parent) {
 
-        Log.e(LOG_TAG, "getView: "
-                + position);
-
         ViewHolder viewHolder;
 
         if (convertView == null) {
-
-            Log.e(LOG_TAG, "getView: " +
-                    position
-                    + " convertView == null");
-
             LayoutInflater inflater = ((Activity) mContext).getLayoutInflater();
             convertView = inflater.inflate(R.layout.image_item, parent, false);
 
@@ -114,68 +105,27 @@ public class ListViewAdapter extends BaseAdapter {
             viewHolder.setProgressBar((ProgressBar) convertView.findViewById(R.id.progress));
             convertView.setTag(viewHolder);
         } else {
-
-            Log.e(LOG_TAG, "getView: " +
-                    position
-                    + " convertView != null");
-
             viewHolder = (ViewHolder) convertView.getTag();
         }
 
-        viewHolder.setImage((Image)getItem(position));
+        viewHolder.setImage((Image) getItem(position));
         viewHolder.getTextView().setText(viewHolder.getImage().getFileName());
 
 
-        if(viewHolder.getImage().getBitmap() != null)
-        {
+        if (viewHolder.getImage().getBitmap() != null) {
             ImageView imageView = viewHolder.getImageView();
             imageView.setImageBitmap(viewHolder.getImage().getBitmap());
             imageView.setVisibility(View.VISIBLE);
 
             ProgressBar progressBar = viewHolder.getProgressBar();
             progressBar.setVisibility(View.INVISIBLE);
-        }
-        else
-        {
+        } else {
             ImageView imageView = viewHolder.getImageView();
             imageView.setVisibility(View.INVISIBLE);
 
             ProgressBar progressBar = viewHolder.getProgressBar();
             progressBar.setVisibility(View.VISIBLE);
         }
-
-//        if (viewHolder != null) {
-//
-//            Log.e(LOG_TAG, "getView: " +
-//                    position
-//                    + " viewHolder != null");
-//
-//            viewHolder.getTextView().setText(viewHolder.getImage().getFileName());
-//            if (viewHolder.getImage().getBitmap() != null) {
-//                ImageView imageView = viewHolder.getImageView();
-//                imageView.setImageBitmap(viewHolder.getImage().getBitmap());
-//                imageView.setVisibility(View.VISIBLE);
-//
-//                ProgressBar progressBar = viewHolder.getProgressBar();
-//                progressBar.setVisibility(View.INVISIBLE);
-//            } else {
-//                ImageView imageView = viewHolder.getImageView();
-//                imageView.setVisibility(View.INVISIBLE);
-//
-//                ProgressBar progressBar = viewHolder.getProgressBar();
-//                progressBar.setVisibility(View.VISIBLE);
-//            }
-//        } else {
-//            Log.e(LOG_TAG, "getView: " +
-//                    position
-//                    + " viewHolder == null");
-//        }
-//
-//        Log.e(LOG_TAG, "getView:"
-//                + position
-//                + " "
-//                + viewHolder.mImage.getFileName());
-
         return convertView;
     }
 }

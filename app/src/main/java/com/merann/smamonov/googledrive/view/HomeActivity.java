@@ -99,7 +99,6 @@ public class HomeActivity extends AppCompatActivity {
         Log.d(LOG_TAG, "onStart");
         super.onStart();
         mDriveServiceProxy.bind();
-
         updateListView();
     }
 

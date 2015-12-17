@@ -1,5 +1,6 @@
 package com.merann.smamonov.googledrive.managers;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.merann.smamonov.googledrive.model.Image;
@@ -21,7 +22,34 @@ public class LocalStorageManager {
         void onBitmapLoaded(String fileName);
     }
 
-    static public final String MEDIA_STORAGE = "/mnt/extSdCard/DCIM/Camera";
+    public enum IMAGE_FOLDER {
+        IMAGE_FOLDER_ICON_CACHE,
+        IMAGE_FOLDER_IMAGE_CACHE,
+        IMAGE_FOLDER_CAMERA
+    }
+
+    static private final String MEDIA_STORAGE = "/mnt/extSdCard/DCIM/Camera";
+
+    private static String getImageFolderPath(Context context, IMAGE_FOLDER folder) {
+        String result = null;
+
+        switch (folder) {
+            case IMAGE_FOLDER_ICON_CACHE: {
+                DiskCacheHelper diskCacheHelper = new DiskCacheHelper(context);
+                result = diskCacheHelper.getIconFolderPath();
+                break;
+            }
+            case IMAGE_FOLDER_IMAGE_CACHE: {
+                DiskCacheHelper diskCacheHelper = new DiskCacheHelper(context);
+                result = diskCacheHelper.getImageFolderPath();
+                break;
+            }
+            case IMAGE_FOLDER_CAMERA:
+                result = MEDIA_STORAGE;
+                break;
+        }
+        return result;
+    }
 
     private HashMap<String, Image> mFiles = new HashMap<>();
     private Queue<Image> mImagesToBeLoaded = new LinkedList<Image>();
@@ -29,10 +57,11 @@ public class LocalStorageManager {
     private BitmapLoadedListener mBitmapLoadedListener;
     private String mSearchFolder;
 
-
-    public LocalStorageManager(String searchFolder, BitmapLoadedListener bitmapLoadedListener) {
+    public LocalStorageManager(Context context,
+                               IMAGE_FOLDER folderType,
+                               BitmapLoadedListener bitmapLoadedListener) {
         mBitmapLoadedListener = bitmapLoadedListener;
-        mSearchFolder = searchFolder;
+        mSearchFolder = getImageFolderPath(context, folderType);
     }
 
     public List<Image> getImagesList() {
@@ -46,8 +75,6 @@ public class LocalStorageManager {
 
         if (picture_folder != null) {
             File[] files = picture_folder.listFiles();
-
-            Log.e(LOG_TAG, "files sie:" + files.length);
 
             for (File file : picture_folder.listFiles()) {
                 if (!mFiles.containsKey(file.getName())) {
@@ -70,7 +97,7 @@ public class LocalStorageManager {
                             File file = getFileByFileName(image.getFileName());
                             image.setBitmap(ImageService.loadIcon(file));
 
-                            Log.d(LOG_TAG, image.getFileName() + " bitmap was updated" );
+                            Log.d(LOG_TAG, image.getFileName() + " bitmap was updated");
 
                             mBitmapLoadedListener.onBitmapLoaded(image.getFileName());
                         }

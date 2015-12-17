@@ -141,4 +141,12 @@ public class DiskCacheHelper {
         }
         saveBitmapToFile(newFile, bitmap);
     }
+
+    public String getIconFolderPath() {
+        return mIconCacheFolder.getPath();
+    }
+
+    public String getImageFolderPath() {
+        return mImageCacheFolder.getPath();
+    }
 }

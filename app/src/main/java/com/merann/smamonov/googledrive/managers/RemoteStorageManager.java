@@ -85,7 +85,6 @@ public class RemoteStorageManager {
     private GoogleApiClient mGoogleApiClient;
     Configuration mCurrentConfiguration;
     private List<RemoteDriveFile> mFiles = new ArrayList<>();
-    boolean mIsConnectionRequested;
     DriveFolder mDriveFolder;
     RemoteStorageManagerListener mRemoteStorageManagerListener;
     ChangeListener mChangeListener;
@@ -181,7 +180,7 @@ public class RemoteStorageManager {
                         handleCreateFolderResponse(driveFolderResult, newFolderName);
 
                         if (mDriveFolder != null) {
-                            onFolderCreatedAsync();
+                            onFolderCreated();
                         }
                     }
                 });
@@ -195,7 +194,7 @@ public class RemoteStorageManager {
         handleCreateFolderResponse(driveFolderResult, newFolderName);
 
         if (mDriveFolder != null) {
-            onFolderCreatedSync();
+            onFolderCreated();
         }
     }
 
@@ -225,22 +224,20 @@ public class RemoteStorageManager {
                 printFileInfo(metadata);
 
                 RemoteDriveFile file = new RemoteDriveFile(metadata);
-
                 mFiles.add(file);
-
                 mRemoteStorageManagerListener.onNewFileDetected(file);
             }
         }
     }
 
-    private void getImageFilesSync(DriveFolder driveFolder) {
+    public void getFileListSync() {
         Log.d(LOG_TAG, "getImageFilesSync");
         DriveApi.MetadataBufferResult metadataBufferResult = prepareGetImageFilesRequest().await();
         handleGetImageFilesResponse(metadataBufferResult);
-        downloadFilesSync();
+//        downloadFilesSync();
     }
 
-    private void getImageFilesAsync(DriveFolder driveFolder) {
+    public void getFileListAsync() {
         Log.d(LOG_TAG, "getImageFilesAsync");
 
         prepareGetImageFilesRequest()
@@ -249,7 +246,7 @@ public class RemoteStorageManager {
                     public void onResult(DriveApi.MetadataBufferResult metadataBufferResult) {
                         Log.d(LOG_TAG, "getImeageFiles::onResult:");
                         handleGetImageFilesResponse(metadataBufferResult);
-                        downloadFilesAsync();
+//                        downloadFilesAsync();
                     }
                 });
     }
@@ -316,22 +313,15 @@ public class RemoteStorageManager {
         Log.d(LOG_TAG, "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     }
 
-    public void onFolderCreatedAsync() {
-        getImageFilesAsync(mDriveFolder);
+    public void onFolderCreated() {
+        Log.d(LOG_TAG, "onFolderCreated");
+        mRemoteStorageManagerListener.onConnectionEstablished();
     }
 
-    public void onFolderCreatedSync() {
-        getImageFilesSync(mDriveFolder);
+    public void onFolderExisted() {
+        Log.d(LOG_TAG, "onFolderExisted");
+        mRemoteStorageManagerListener.onConnectionEstablished();
     }
-
-    public void onFolderExistedAsync() {
-        getImageFilesAsync(mDriveFolder);
-    }
-
-    public void onFolderExistedSync() {
-        getImageFilesSync(mDriveFolder);
-    }
-
 
     private void handleGetUserFolderResult(DriveApi.MetadataBufferResult metadataBufferResult) {
         MetadataBuffer metadataBuffer = metadataBufferResult.getMetadataBuffer();
@@ -363,7 +353,7 @@ public class RemoteStorageManager {
         }
     }
 
-    public void getFileListAsync() {
+    public void getUserFolderAsync() {
         prepareGetUserFolderRequest()
                 .setResultCallback(new ResultCallback<DriveApi.MetadataBufferResult>() {
                     @Override
@@ -371,7 +361,7 @@ public class RemoteStorageManager {
                         handleGetUserFolderResult(metadataBufferResult);
 
                         if (mDriveFolder != null) {
-                            onFolderExistedAsync();
+                            onFolderExisted();
                         } else {
                             createFolderAsync(mCurrentConfiguration.getFolderName());
                         }
@@ -380,12 +370,12 @@ public class RemoteStorageManager {
     }
 
 
-    public void getFileListSync() {
+    public void getUserFolderSync() {
         DriveApi.MetadataBufferResult searchResult = prepareGetUserFolderRequest().await();
         handleGetUserFolderResult(searchResult);
 
         if (mDriveFolder != null) {
-            onFolderExistedSync();
+            onFolderExisted();
         } else {
             createFolderSync(mCurrentConfiguration.getFolderName());
         }
@@ -724,8 +714,7 @@ public class RemoteStorageManager {
                         @Override
                         public void onConnected(Bundle bundle) {
                             Log.d(LOG_TAG, "onConnected");
-                            mRemoteStorageManagerListener.onConnectionEstablished();
-                            //getFileListAsync();
+                            getUserFolderAsync();
                         }
 
                         @Override
@@ -748,6 +737,7 @@ public class RemoteStorageManager {
 
     public void disconnect() {
         mGoogleApiClient.disconnect();
+        mGoogleApiClient = null;
     }
 
 }

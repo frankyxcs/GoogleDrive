@@ -9,6 +9,7 @@ import com.merann.smamonov.googledrive.model.Image;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -69,6 +70,14 @@ public class StorageManager {
             public void onConnectionEstablished() {
                 Log.d(LOG_TAG, "onConnectionEstablished");
 
+                Iterator fileToBeLoadIterator = mFilesToBeUploaded.entrySet().iterator();
+
+                while (fileToBeLoadIterator.hasNext()) {
+                    File file = ((HashMap.Entry<String, File>) fileToBeLoadIterator.next()).getValue();
+                    mRemoteStorageManager.uploadFileAsync(file);
+                    fileToBeLoadIterator.remove();
+                }
+
                 for (File file : mFilesToBeUploaded.values()) {
                     mRemoteStorageManager.uploadFileAsync(file);
                 }
@@ -102,9 +111,24 @@ public class StorageManager {
 
         for (Image image : localImages) {
             mImages.put(image.getFileName(), image);
+            mStorageManagerListener.onFilesChanged();
         }
 
-        mStorageManagerListener.onFilesChanged();
+        LocalStorageManager localStorageManager = new LocalStorageManager(mContext,
+                LocalStorageManager.IMAGE_FOLDER.IMAGE_FOLDER_ICON_CACHE,
+                new LocalStorageManager.BitmapLoadedListener() {
+                    @Override
+                    public void onBitmapLoaded(String fileName) {
+                        Log.d(LOG_TAG, "onBitmapLoaded");
+                    }
+                });
+
+        for (Image image : mImages.values())
+        {
+            File iconCache = localStorageManager.getFileByFileName(image.getFileName());
+            image.setBitmap(ImageService.loadIcon(iconCache));
+            mStorageManagerListener.onFilesChanged();
+        }
     }
 
     public void addRemoteImage(RemoteStorageManager.RemoteDriveFile file) {
@@ -150,6 +174,8 @@ public class StorageManager {
     public void uploadFile(File file) {
         Log.d(LOG_TAG, "uploadFile");
 
+        isSyncNeeded = true;
+
         if (mRemoteStorageManager.isConnected()) {
             mRemoteStorageManager.uploadFileAsync(file);
         } else {
@@ -159,8 +185,7 @@ public class StorageManager {
         }
     }
 
-    public void handleRemoteDriveProblemSolved()
-    {
+    public void handleRemoteDriveProblemSolved() {
         Log.d(LOG_TAG, "handleRemoteDriveProblemSolved");
         mRemoteStorageManager.connect();
     }
