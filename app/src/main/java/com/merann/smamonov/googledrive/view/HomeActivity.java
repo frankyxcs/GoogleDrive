@@ -89,17 +89,17 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        Log.d(LOG_TAG, "onResume");
-        super.onResume();
+    protected void onStart() {
+        Log.d(LOG_TAG, "onStart");
+        super.onStart();
         mDriveServiceProxy.bind();
         updateListView();
     }
 
     @Override
-    protected void onPause() {
-        Log.d(LOG_TAG, "onPause");
-        super.onPause();
+    protected void onStop() {
+        Log.d(LOG_TAG, "onStop");
+        super.onStop();
         mDriveServiceProxy.unBind();
     }
 

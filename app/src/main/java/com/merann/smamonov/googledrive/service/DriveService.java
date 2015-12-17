@@ -1,5 +1,6 @@
 package com.merann.smamonov.googledrive.service;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -10,7 +11,9 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.merann.smamonov.googledrive.managers.ConfigurationManager;
 import com.merann.smamonov.googledrive.managers.StorageManager;
+import com.merann.smamonov.googledrive.model.Configuration;
 import com.merann.smamonov.googledrive.model.Image;
 import com.merann.smamonov.googledrive.view.NotificationActivity;
 
@@ -330,5 +333,17 @@ public class DriveService extends BaseService {
     {
         Log.d(LOG_TAG, "handleRemoteDriveProblemSolved");
         mStorageManager.handleRemoteDriveProblemSolved();
+    }
+
+    private void setRepeating()
+    {
+        ConfigurationManager configurationManager = new ConfigurationManager(this);
+        Configuration configuration =  configurationManager.getConfiguration();
+
+        AlarmManager alarmManager =(AlarmManager)getSystemService(Context.ALARM_SERVICE);
+//        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
+//                0,
+//                configuration.getSyncPeriod() * 1000,
+//                getPendingIntent(ctxt));
     }
 }
