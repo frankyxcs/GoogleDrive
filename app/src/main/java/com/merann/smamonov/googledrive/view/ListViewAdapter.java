@@ -2,6 +2,7 @@ package com.merann.smamonov.googledrive.view;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,15 +22,13 @@ import java.util.List;
  */
 public class ListViewAdapter extends BaseAdapter {
 
+    public final String LOG_TAG = "ListViewAdapter";
+
     class ViewHolder {
         TextView mTextView;
         ImageView mImageView;
         ProgressBar mProgressBar;
         Image mImage;
-
-        public ViewHolder(Image image) {
-            this.mImage = image;
-        }
 
         public TextView getTextView() {
             return mTextView;
@@ -64,27 +63,24 @@ public class ListViewAdapter extends BaseAdapter {
         }
     }
 
-    final private ArrayList<ViewHolder> viewHolders = new ArrayList<>();
-    private final Context context;
+    private List<Image> mImages = new ArrayList<>();
+    private final Context mContext;
 
     public ListViewAdapter(Context context,
                            List<Image> images) {
-        this.context = context;
 
-        for (Image image : images) {
-            ViewHolder viewHolder = new ViewHolder(image);
-            viewHolders.add(viewHolder);
-        }
+        mContext = context;
+        mImages = images;
     }
 
     @Override
     public int getCount() {
-        return viewHolders.size();
+        return mImages.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return viewHolders.get(position).getImage();
+        return mImages.get(position);
     }
 
     @Override
@@ -97,31 +93,88 @@ public class ListViewAdapter extends BaseAdapter {
                         View convertView,
                         ViewGroup parent) {
 
-        ViewHolder viewHolder = viewHolders.get(position);
+        Log.e(LOG_TAG, "getView: "
+                + position);
+
+        ViewHolder viewHolder;
 
         if (convertView == null) {
-            LayoutInflater inflater = ((Activity) context).getLayoutInflater();
+
+            Log.e(LOG_TAG, "getView: " +
+                    position
+                    + " convertView == null");
+
+            LayoutInflater inflater = ((Activity) mContext).getLayoutInflater();
             convertView = inflater.inflate(R.layout.image_item, parent, false);
 
+
+            viewHolder = new ViewHolder();
             viewHolder.setTextView((TextView) convertView.findViewById(R.id.image_text));
             viewHolder.setImageView((ImageView) convertView.findViewById(R.id.image));
             viewHolder.setProgressBar((ProgressBar) convertView.findViewById(R.id.progress));
             convertView.setTag(viewHolder);
         } else {
+
+            Log.e(LOG_TAG, "getView: " +
+                    position
+                    + " convertView != null");
+
             viewHolder = (ViewHolder) convertView.getTag();
         }
 
-        if (viewHolder != null) {
-            viewHolder.getTextView().setText(viewHolder.getImage().getFileName());
-            if (viewHolder.getImage().getBitmap() != null) {
-                ImageView imageView = viewHolder.getImageView();
-                imageView.setImageBitmap(viewHolder.getImage().getBitmap());
-                imageView.setVisibility(View.VISIBLE);
+        viewHolder.setImage((Image)getItem(position));
+        viewHolder.getTextView().setText(viewHolder.getImage().getFileName());
 
-                ProgressBar progressBar = viewHolder.getProgressBar();
-                progressBar.setVisibility(View.INVISIBLE);
-            }
+
+        if(viewHolder.getImage().getBitmap() != null)
+        {
+            ImageView imageView = viewHolder.getImageView();
+            imageView.setImageBitmap(viewHolder.getImage().getBitmap());
+            imageView.setVisibility(View.VISIBLE);
+
+            ProgressBar progressBar = viewHolder.getProgressBar();
+            progressBar.setVisibility(View.INVISIBLE);
         }
+        else
+        {
+            ImageView imageView = viewHolder.getImageView();
+            imageView.setVisibility(View.INVISIBLE);
+
+            ProgressBar progressBar = viewHolder.getProgressBar();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
+//        if (viewHolder != null) {
+//
+//            Log.e(LOG_TAG, "getView: " +
+//                    position
+//                    + " viewHolder != null");
+//
+//            viewHolder.getTextView().setText(viewHolder.getImage().getFileName());
+//            if (viewHolder.getImage().getBitmap() != null) {
+//                ImageView imageView = viewHolder.getImageView();
+//                imageView.setImageBitmap(viewHolder.getImage().getBitmap());
+//                imageView.setVisibility(View.VISIBLE);
+//
+//                ProgressBar progressBar = viewHolder.getProgressBar();
+//                progressBar.setVisibility(View.INVISIBLE);
+//            } else {
+//                ImageView imageView = viewHolder.getImageView();
+//                imageView.setVisibility(View.INVISIBLE);
+//
+//                ProgressBar progressBar = viewHolder.getProgressBar();
+//                progressBar.setVisibility(View.VISIBLE);
+//            }
+//        } else {
+//            Log.e(LOG_TAG, "getView: " +
+//                    position
+//                    + " viewHolder == null");
+//        }
+//
+//        Log.e(LOG_TAG, "getView:"
+//                + position
+//                + " "
+//                + viewHolder.mImage.getFileName());
 
         return convertView;
     }

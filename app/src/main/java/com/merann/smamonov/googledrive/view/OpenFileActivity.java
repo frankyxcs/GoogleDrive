@@ -24,19 +24,24 @@ public class OpenFileActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.d(LOG_TAG, "onCreate");
+
         setContentView(R.layout.activity_open_file);
 
-        final LocalStorageManager localStorageManager = new LocalStorageManager(LocalStorageManager.MEDIA_STORAGE, new LocalStorageManager.BitmapLoadedListener() {
-            @Override
-            public void onBitmapLoaded(String fileName) {
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
+        final LocalStorageManager localStorageManager
+                = new LocalStorageManager(LocalStorageManager.MEDIA_STORAGE,
+                new LocalStorageManager.BitmapLoadedListener() {
                     @Override
-                    public void run() {
-                        updateListView();
+                    public void onBitmapLoaded(String fileName) {
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateListView();
+                            }
+                        });
                     }
                 });
-            }
-        });
 
         final ListView listView = (ListView) findViewById(R.id.listView);
         mListViewAdapter = new ListViewAdapter(this, localStorageManager.getImagesList());

@@ -1,5 +1,7 @@
 package com.merann.smamonov.googledrive.managers;
 
+import android.util.Log;
+
 import com.merann.smamonov.googledrive.model.Image;
 
 import java.io.File;
@@ -12,6 +14,8 @@ import java.util.Queue;
  * Created by samam_000 on 10.12.2015.
  */
 public class LocalStorageManager {
+
+    public final String LOG_TAG = "LocalStorageManager";
 
     public interface BitmapLoadedListener {
         void onBitmapLoaded(String fileName);
@@ -33,13 +37,24 @@ public class LocalStorageManager {
 
     public List<Image> getImagesList() {
 
+        Log.d(LOG_TAG, "getImagesList");
+
         //TODO: get the folder by global name
         File picture_folder = new File(mSearchFolder);
+
+        List<Image> result = new LinkedList();
+
         if (picture_folder != null) {
+            File[] files = picture_folder.listFiles();
+
+            Log.e(LOG_TAG, "files sie:" + files.length);
+
             for (File file : picture_folder.listFiles()) {
                 if (!mFiles.containsKey(file.getName())) {
                     Image image = new Image(file.getName());
                     mFiles.put(file.getName(), image);
+
+                    result.add(image);
                     mImagesToBeLoaded.add(image);
                 }
             }
@@ -54,6 +69,9 @@ public class LocalStorageManager {
                             Image image = mImagesToBeLoaded.poll();
                             File file = getFileByFileName(image.getFileName());
                             image.setBitmap(ImageService.loadIcon(file));
+
+                            Log.d(LOG_TAG, image.getFileName() + " bitmap was updated" );
+
                             mBitmapLoadedListener.onBitmapLoaded(image.getFileName());
                         }
                     }
@@ -62,11 +80,12 @@ public class LocalStorageManager {
             }
         }
 
-        List<Image> result = new LinkedList<>(mFiles.values());
         return result;
     }
 
     public File getFileByFileName(String fileName) {
+        Log.d(LOG_TAG, "getFileByFileName");
+
         File result = null;
         File picture_folder = new File(mSearchFolder);
         if (picture_folder != null) {

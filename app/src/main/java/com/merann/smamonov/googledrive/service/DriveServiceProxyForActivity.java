@@ -128,7 +128,7 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
             case GOOGLE_DRIVE_RESOLUTION_RESULT: {
                 if (resultCode == Activity.RESULT_OK) {
                     Log.d(LOG_TAG, "onActivityResult GOOGLE_DRIVE_RESOLUTION_RESULT result is RESULT_OK, starting service");
-                    mDriveServiceBinder.doSync();
+                    mDriveServiceBinder.handleRemoteDriveProblemSolved();
                 } else {
                     Log.e(LOG_TAG, "onActivityResult GOOGLE_DRIVE_RESOLUTION_RESULT error resultCode " + resultCode);
                 }

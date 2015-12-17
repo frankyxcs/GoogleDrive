@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class DriveService extends BaseService {
 
-    public static class DriveServiceBinder extends Binder {
+    static public class DriveServiceBinder extends Binder {
 
         interface DriveServiceBinderListener {
             void onFileUploaded(File file, Boolean isSuccess);
@@ -55,6 +55,11 @@ public class DriveService extends BaseService {
 
         public void uploadFile(File file) {
             mDriveService.uploadFile(file);
+        }
+
+        public void handleRemoteDriveProblemSolved()
+        {
+            mDriveService.handleRemoteDriveProblemSolved();
         }
 
         public void setListener(DriveServiceBinderListener listener) {
@@ -300,17 +305,26 @@ public class DriveService extends BaseService {
 
     @Override
     public IBinder onBind(Intent intent) {
+        Log.d(LOG_TAG, "onBind");
         mBinder = new DriveServiceBinder(this);
         return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
+        Log.d(LOG_TAG, "onUnbind");
         mBinder = null;
         return true;
     }
 
     public List<Image> getImagesList() {
+        Log.d(LOG_TAG, "getImagesList");
         return mStorageManager.getImages();
+    }
+
+    public void handleRemoteDriveProblemSolved()
+    {
+        Log.d(LOG_TAG, "handleRemoteDriveProblemSolved");
+        mStorageManager.handleRemoteDriveProblemSolved();
     }
 }

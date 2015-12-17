@@ -28,6 +28,8 @@ public class StorageManager {
     private final static String LOG_TAG = "StorageManager";
 
     private HashMap<String, Image> mImages;
+    private HashMap<String, File> mFilesToBeUploaded;
+
     private Context mContext;
 
     private StorageManagerListener mStorageManagerListener;
@@ -35,6 +37,7 @@ public class StorageManager {
 
     private DiskCacheHelper mDiskCacheHelper;
     private DataBaseHelper mDataBaseHelper;
+    private Boolean isSyncNeeded;
 
     public StorageManager(Context context,
                           final StorageManagerListener storageManagerListener) {
@@ -46,6 +49,8 @@ public class StorageManager {
         mDiskCacheHelper = new DiskCacheHelper(mContext);
         mDataBaseHelper = new DataBaseHelper(mContext);
         mImages = new HashMap();
+        mFilesToBeUploaded = new HashMap();
+        isSyncNeeded = false;
 
         mRemoteStorageManager = new RemoteStorageManager(context, new RemoteStorageManager.RemoteStorageManagerListener() {
             @Override
@@ -63,6 +68,15 @@ public class StorageManager {
             @Override
             public void onConnectionEstablished() {
                 Log.d(LOG_TAG, "onConnectionEstablished");
+
+                for (File file : mFilesToBeUploaded.values()) {
+                    mRemoteStorageManager.uploadFileAsync(file);
+                }
+
+                if (isSyncNeeded) {
+                    isSyncNeeded = false;
+                    mRemoteStorageManager.getFileListAsync();
+                }
             }
 
             @Override
@@ -87,8 +101,6 @@ public class StorageManager {
         List<Image> localImages = mDataBaseHelper.getImagesFromDb();
 
         for (Image image : localImages) {
-            Log.e(LOG_TAG, "loadLocalImages local image:"
-                    + image.getFileName());
             mImages.put(image.getFileName(), image);
         }
 
@@ -132,11 +144,25 @@ public class StorageManager {
     public void doSync() {
         Log.d(LOG_TAG, "doSync");
         mRemoteStorageManager.connect();
+        isSyncNeeded = true;
     }
 
     public void uploadFile(File file) {
         Log.d(LOG_TAG, "uploadFile");
-        mRemoteStorageManager.uploadFileAsync(file);
+
+        if (mRemoteStorageManager.isConnected()) {
+            mRemoteStorageManager.uploadFileAsync(file);
+        } else {
+
+            mFilesToBeUploaded.put(file.getName(), file);
+            mRemoteStorageManager.connect();
+        }
+    }
+
+    public void handleRemoteDriveProblemSolved()
+    {
+        Log.d(LOG_TAG, "handleRemoteDriveProblemSolved");
+        mRemoteStorageManager.connect();
     }
 
 

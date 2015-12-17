@@ -107,7 +107,8 @@ public class RemoteStorageManager {
 //    }
 
     public boolean isConnected() {
-        return mGoogleApiClient.isConnected();
+        return mGoogleApiClient != null
+                && mGoogleApiClient.isConnected();
     }
 
 //    public void setCurrentConfiguration(ConfigurationService.Configuration mCurrentConfiguration) {
@@ -411,6 +412,7 @@ public class RemoteStorageManager {
     private PendingResult<DriveFolder.DriveFileResult> prepapareRemoteFileContetnt(DriveApi.DriveContentsResult driveContentsResult,
                                                                                    final File file) {
         Log.d(LOG_TAG, "handleCreateRemoteFileResponse");
+
         final MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder()
                 .setTitle(file.getName())
                 .build();
@@ -463,10 +465,12 @@ public class RemoteStorageManager {
     }
 
     public void uploadFileAsync(final File file) {
+        Log.d(LOG_TAG, "uploadFileAsync:" + file.getPath());
         prepareCreateRemoteFileRequest()
                 .setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
                     @Override
                     public void onResult(DriveApi.DriveContentsResult driveContentsResult) {
+                        Log.d(LOG_TAG, "uploadFileAsync:onResult " + file.getPath());
                         prepapareRemoteFileContetnt(driveContentsResult, file)
                                 .setResultCallback(new ResultCallback<DriveFolder.DriveFileResult>() {
                                                        @Override
@@ -721,7 +725,7 @@ public class RemoteStorageManager {
                         public void onConnected(Bundle bundle) {
                             Log.d(LOG_TAG, "onConnected");
                             mRemoteStorageManagerListener.onConnectionEstablished();
-                            getFileListAsync();
+                            //getFileListAsync();
                         }
 
                         @Override
