@@ -26,6 +26,7 @@ public class HomeActivity extends AppCompatActivity {
 
     DriveServiceProxyForActivity mDriveServiceProxy;
     private static final int OPEN_FILE_DIALOG_REQUEST = 101;
+    private static final int OPEN_SETTINGS_REQUEST = 102;
     List<Image> mImages = new ArrayList<>();
     ListViewAdapter mListViewAdapter;
 
@@ -79,6 +80,9 @@ public class HomeActivity extends AppCompatActivity {
                 });
 
         onServiceConnected(false);
+
+        mDriveServiceProxy.bind();
+        updateListView();
     }
 
     private void updateListView() {
@@ -89,17 +93,9 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        Log.d(LOG_TAG, "onStart");
-        super.onStart();
-        mDriveServiceProxy.bind();
-        updateListView();
-    }
-
-    @Override
-    protected void onStop() {
-        Log.d(LOG_TAG, "onStop");
-        super.onStop();
+    protected void onDestroy() {
+        Log.d(LOG_TAG, "onDestroy");
+        super.onDestroy();
         mDriveServiceProxy.unBind();
     }
 
@@ -156,6 +152,19 @@ public class HomeActivity extends AppCompatActivity {
                             mDriveServiceProxy.uploadFile(file);
                             break;
                         default:
+                            Log.d(LOG_TAG, "onActivityResult: OPEN_FILE_DIALOG_REQUEST : NOT RESULT_OK");
+                            break;
+                    }
+                    break;
+                }
+                case OPEN_SETTINGS_REQUEST: {
+                    switch (resultCode) {
+                        case RESULT_OK:
+                            Log.d(LOG_TAG, "onActivityResult: OPEN_SETTINGS_REQUEST : RESULT_OK");
+                            mDriveServiceProxy.updateConfiguration();
+                            break;
+                        default:
+                            Log.d(LOG_TAG, "onActivityResult: OPEN_SETTINGS_REQUEST : NOT RESULT_OK");
                             break;
                     }
                     break;
@@ -173,7 +182,7 @@ public class HomeActivity extends AppCompatActivity {
     private void showSettingsActivity() {
         Log.d(LOG_TAG, "showSettingsActivity");
         Intent settingsIntent = new Intent(this, SettingsActivity.class);
-        startActivity(settingsIntent);
+        startActivityForResult(settingsIntent, OPEN_SETTINGS_REQUEST);
     }
 
     private void openFileDialog() {

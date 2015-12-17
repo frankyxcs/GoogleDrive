@@ -212,14 +212,16 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
     public void unBind() {
         Log.d(LOG_TAG, "unBind");
         super.unBind();
-
-        Log.d(LOG_TAG, "mServiceConnection:"
-        + mServiceConnection);
-
         mActivityContext.unbindService(mServiceConnection);
     }
 
     public List<Image> getImagesList() {
         return mDriveServiceBinder.getImagesList();
+    }
+
+    public void updateConfiguration()
+    {
+        Log.d(LOG_TAG, "updateConfiguration");
+        mDriveServiceBinder.updateConfiguration();
     }
 }

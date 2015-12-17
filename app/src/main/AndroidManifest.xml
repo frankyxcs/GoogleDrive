@@ -35,11 +35,6 @@
                 <action android:name="com.merann.smamonov.googledrive.DriveService" />
             </intent-filter>
         </service>
-        <service android:name=".service.ConfigurationService">
-            <intent-filter>
-                <action android:name="com.merann.smamonov.googledrive.ConfigurationService" />
-            </intent-filter>
-        </service>
 
         <activity android:name=".view.NotificationActivity"></activity>
     </application>

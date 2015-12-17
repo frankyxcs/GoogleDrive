@@ -98,6 +98,11 @@ public class DriveService extends BaseService {
                 mDriveServiceBinderListener.onConnectedFailed(connectionResult);
             }
         }
+
+        public void updateConfiguration()
+        {
+            mDriveService.updateConfiguration();
+        }
     }
 
     static public final String INTEND_STRING = "com.merann.smamonov.googledrive.DriveService";
@@ -120,46 +125,6 @@ public class DriveService extends BaseService {
 
         Log.d(LOG_TAG, "onCreate");
 
-//        addMessageHandler(Message.REMOTE_DRIVE_AUTHENTICATION_PERFORM_RESPONSE, new IMessageHandler() {
-//            @Override
-//            public void onIntent(Intent intent) {
-//                Log.d(LOG_TAG, "REMOTE_DRIVE_AUTHENTICATION_PERFORM_RESPONSE");
-//                connect();
-//            }
-//        });
-//        addMessageHandler(Message.REMOTE_DRIVE_CONNECT_REQUEST, new IMessageHandler() {
-//            @Override
-//            public void onIntent(Intent intent) {
-//                Log.d(LOG_TAG, "REMOTE_DRIVE_CONNECT_REQUEST");
-//                connect();
-//            }
-//        });
-//
-//        addMessageHandler(Message.REMOTE_DRIVE_CONFIGURATION_UPDATE_NOTIFICATION, new IMessageHandler() {
-//            @Override
-//            public void onIntent(Intent intent) {
-//                Log.d(LOG_TAG, "REMOTE_DRIVE_CONFIGURATION_UPDATE_NOTIFICATION");
-//                setupConfiguration(intent);
-//            }
-//        });
-//
-//        addMessageHandler(Message.REMOTE_DRIVE_UPLOAD_FILE_REQUEST, new IMessageHandler() {
-//            @Override
-//            public void onIntent(Intent intent) {
-//                Log.d(LOG_TAG, "REMOTE_DRIVE_UPLOAD_FILE_REQUEST");
-//                uploadFile(intent);
-//            }
-//        });
-//
-//        addMessageHandler(Message.REMOTE_DRIVE_LOAD_FILES_REQUEST, new IMessageHandler() {
-//            @Override
-//            public void onIntent(Intent intent) {
-//                Log.d(LOG_TAG, "REMOTE_DRIVE_LOAD_FILES_REQUEST");
-//                handleConnectionEstablished();
-//            }
-//        });
-//
-//
         addMessageHandler(Message.REMOTE_DRIVE_START, new IMessageHandler() {
             @Override
             public void onIntent(Intent intent) {
@@ -197,22 +162,6 @@ public class DriveService extends BaseService {
         super.onDestroy();
         mStorageManager = null;
     }
-
-    private void onConnectionEstablished() {
-        Log.d(LOG_TAG, "onConnectionEstablished");
-        sendMessage(createMessage(Message.REMOTE_DRIVE_CONNECT_NOTIFICATION));
-    }
-
-//    private void handleConnectionEstablished() {
-//        Log.d(LOG_TAG, "handleConnectionEstablished");
-//        sendMessage(createMessage(Message.REMOTE_DRIVE_CONNECT_RESPONSE));
-//        RemoteStorageManager.getInstance().getFilesSync();
-//    }
-//
-//    private void onConnectionLost() {
-//        Log.d(LOG_TAG, "onConnectionLost");
-//        sendMessage(createMessage(Message.REMOTE_DRIVE_DISCONNECT_NOTIFICATION));
-//    }
 
     private void sendNotification(ConnectionResult connectionResult) {
         Log.e(LOG_TAG, "sendNotification");
@@ -271,37 +220,9 @@ public class DriveService extends BaseService {
         }
     }
 
-//        sendMessage(createMessage(Message.REMOTE_DRIVE_AUTHENTICATION_PERFORM_REQUEST)
-//                .putExtra(ConnectionResult.class.toString(),
-//                        connectionResult));
-
-//    private void setupConfiguration(Intent intent) {
-//        Log.d(LOG_TAG, "setupConfiguration");
-//
-//        RemoteStorageManager.getInstance().setCurrentConfiguration((ConfigurationService.Configuration) intent
-//                .getSerializableExtra(ConfigurationService
-//                        .Configuration
-//                        .class
-//                        .getName()));
-//
-//        Log.d(LOG_TAG, "setupConfiguration : configuration was updated: "
-//                + RemoteStorageManager.getInstance().getCurrentConfiguration().getFolderName()
-//                + RemoteStorageManager.getInstance().getCurrentConfiguration().getSyncPeriod());
-//
-//        if (RemoteStorageManager.getInstance().isConnectionRequested()) {
-//            connect();
-//        }
-//    }
-
-    //    private void getConfiguration() {
-//        ConfigurationServiceProxy configurationServiceProxy = new ConfigurationServiceProxy(this, null, null, null);
-//        configurationServiceProxy.getConfiguration();
-//    }
-//
     private void uploadFile(File file) {
         Log.d(LOG_TAG, "uploadFile : "
                 + file.getName());
-
         mStorageManager.uploadFile(file);
     }
 
@@ -345,5 +266,10 @@ public class DriveService extends BaseService {
 //                0,
 //                configuration.getSyncPeriod() * 1000,
 //                getPendingIntent(ctxt));
+    }
+
+    void updateConfiguration()
+    {
+
     }
 }

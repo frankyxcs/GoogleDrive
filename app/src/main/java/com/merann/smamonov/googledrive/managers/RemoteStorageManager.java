@@ -97,22 +97,10 @@ public class RemoteStorageManager {
         mCurrentConfiguration = configurationManager.getConfiguration();
     }
 
-//    public void setIsConnectionRequested(boolean isConnectionRequested) {
-//        this.mIsConnectionRequested = isConnectionRequested;
-//    }
-
-//    public ConfigurationService.Configuration getCurrentConfiguration() {
-//        return mCurrentConfiguration;
-//    }
-
     public boolean isConnected() {
         return mGoogleApiClient != null
                 && mGoogleApiClient.isConnected();
     }
-
-//    public void setCurrentConfiguration(ConfigurationService.Configuration mCurrentConfiguration) {
-//        this.mCurrentConfiguration = mCurrentConfiguration;
-//    }
 
     public void setOnNewFileListener(RemoteStorageManagerListener remoteStorageManagerListener) {
         this.mRemoteStorageManagerListener = remoteStorageManagerListener;

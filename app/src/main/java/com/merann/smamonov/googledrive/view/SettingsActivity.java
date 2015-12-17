@@ -1,5 +1,6 @@
 package com.merann.smamonov.googledrive.view;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -8,20 +9,18 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.merann.smamonov.googledrive.R;
-import com.merann.smamonov.googledrive.service.ConfigurationServiceProxy;
+import com.merann.smamonov.googledrive.managers.ConfigurationManager;
+import com.merann.smamonov.googledrive.model.Configuration;
 
 public class SettingsActivity extends AppCompatActivity {
 
     public final String LOG_TAG = "GoogleDriveSettingsAct";
 
-    //    private int mSyncPeriod;
     private SeekBar mSyncSeekBar;
     private TextView mSyncPeriodText;
     private EditText mFolderEditText;
-    private ConfigurationServiceProxy mConfigurationServiceProxy;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,32 +28,7 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        /* set up of configuration service proxy */
-        mConfigurationServiceProxy = new ConfigurationServiceProxy(this,
-                new ConfigurationServiceProxy.GetConfigurationListener() {
-                    @Override
-                    public void onGetConfiguration(String folderName, int syncTime) {
-                        Log.d(LOG_TAG, "onGetConfiguration");
-                        updateSyncPeriodFromService(syncTime);
-                        updateFolderNameFromService(folderName);
-                    }
-                },
-                new ConfigurationServiceProxy.UpdateConfigurationListener() {
-                    @Override
-                    public void onUpdateConfiguration(String folderName, int syncTime) {
-                        Log.d(LOG_TAG, "onUpdateConfiguration: folderName:" + folderName + " syncTime:" + syncTime);
-                        Toast.makeText(SettingsActivity.this, "onUpdateConfiguration: folderName:" + folderName + " syncTime:" + syncTime, 100).show();
-                    }
-                },
-                new ConfigurationServiceProxy.CacheCleanCacheListener() {
-                    @Override
-                    public void onCacheClean() {
-                        Log.d(LOG_TAG, "onCacheClean");
-                        Toast.makeText(SettingsActivity.this, "onCacheClean", 100).show();
-                    }
-                });
-
-                /* set up of GUI elements */
+        /* set up of GUI elements */
         mSyncSeekBar = (SeekBar) findViewById(R.id.seekBar);
         mFolderEditText = (EditText) findViewById(R.id.user_folder_name);
 
@@ -86,6 +60,11 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 saveConfigurationSettings();
+
+                Intent intent = new Intent();
+                setResult(RESULT_OK, intent);
+
+                finish();
             }
         });
     }
@@ -123,20 +102,22 @@ public class SettingsActivity extends AppCompatActivity {
 
 
     private void readConfiguration() {
-        mConfigurationServiceProxy.getConfiguration();
+        ConfigurationManager configurationManager = new ConfigurationManager(this);
+        Configuration configuration = configurationManager.getConfiguration();
+
+        updateSyncPeriodFromService(configuration.getSyncPeriod());
+        updateFolderNameFromService(configuration.getFolderName());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mConfigurationServiceProxy.bind();
         readConfiguration();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mConfigurationServiceProxy.unBind();
     }
 
     void saveConfigurationSettings() {
@@ -144,7 +125,10 @@ public class SettingsActivity extends AppCompatActivity {
 
         String folderName = mFolderEditText.getText().toString();
         int syncPeriod = periods[mSyncSeekBar.getProgress()];
-        mConfigurationServiceProxy.setConfiguration(folderName,
-                syncPeriod);
+
+        Configuration configuration = new Configuration(folderName, syncPeriod);
+
+        ConfigurationManager configurationManager = new ConfigurationManager(this);
+        configurationManager.updateConfiguration(configuration);
     }
 }
