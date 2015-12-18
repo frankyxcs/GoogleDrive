@@ -387,9 +387,9 @@ public class RemoteStorageManager {
         return Drive.DriveApi.newDriveContents(mGoogleApiClient);
     }
 
-    private PendingResult<DriveFolder.DriveFileResult> prepapareRemoteFileContetnt(DriveApi.DriveContentsResult driveContentsResult,
-                                                                                   final File file) {
-        Log.d(LOG_TAG, "handleCreateRemoteFileResponse");
+    private PendingResult<DriveFolder.DriveFileResult> prepareRemoteFileContetnt(DriveApi.DriveContentsResult driveContentsResult,
+                                                                                 final File file) {
+        Log.d(LOG_TAG, "prepareRemoteFileContetnt");
 
         final MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder()
                 .setTitle(file.getName())
@@ -437,7 +437,7 @@ public class RemoteStorageManager {
     public void uploadFileSync(final File file) {
         Log.d(LOG_TAG, "uploadFileSync");
         DriveApi.DriveContentsResult driveContentsResult = prepareCreateRemoteFileRequest().await();
-        DriveFolder.DriveFileResult driveFileResult = prepapareRemoteFileContetnt(driveContentsResult, file)
+        DriveFolder.DriveFileResult driveFileResult = prepareRemoteFileContetnt(driveContentsResult, file)
                 .await();
         handleUploadFileResult(driveFileResult, file);
     }
@@ -449,7 +449,7 @@ public class RemoteStorageManager {
                     @Override
                     public void onResult(DriveApi.DriveContentsResult driveContentsResult) {
                         Log.d(LOG_TAG, "uploadFileAsync:onResult " + file.getPath());
-                        prepapareRemoteFileContetnt(driveContentsResult, file)
+                        prepareRemoteFileContetnt(driveContentsResult, file)
                                 .setResultCallback(new ResultCallback<DriveFolder.DriveFileResult>() {
                                                        @Override
                                                        public void onResult(DriveFolder.DriveFileResult driveFileResult) {

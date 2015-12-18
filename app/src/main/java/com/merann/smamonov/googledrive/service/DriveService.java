@@ -39,68 +39,78 @@ public class DriveService extends BaseService {
             void onConnectedFailed(ConnectionResult connectionResult);
         }
 
+        static private final String LOG_TAG = "DriveServiceBinder";
         DriveService mDriveService;
         DriveServiceBinderListener mDriveServiceBinderListener;
 
         public DriveServiceBinder(DriveService driveService) {
             super();
+            Log.d(LOG_TAG, "DriveServiceBinder");
             mDriveServiceBinderListener = null;
             mDriveService = driveService;
         }
 
         public List<Image> getImagesList() {
+            Log.d(LOG_TAG, "getImagesList");
             return mDriveService.getImagesList();
         }
 
         public void doSync() {
+            Log.d(LOG_TAG, "doSync");
             mDriveService.doSync();
         }
 
         public void uploadFile(File file) {
+            Log.d(LOG_TAG, "uploadFile: " + file.getPath());
             mDriveService.uploadFile(file);
         }
 
-        public void handleRemoteDriveProblemSolved()
-        {
+        public void handleRemoteDriveProblemSolved() {
+            Log.d(LOG_TAG, "handleRemoteDriveProblemSolved");
             mDriveService.handleRemoteDriveProblemSolved();
         }
 
         public void setListener(DriveServiceBinderListener listener) {
+            Log.d(LOG_TAG, "setListener");
             mDriveServiceBinderListener = listener;
         }
 
         void notifyFileUploaded(File file, Boolean isSuccess) {
+            Log.d(LOG_TAG, "notifyFileUploaded");
             if (mDriveServiceBinderListener != null) {
                 mDriveServiceBinderListener.onFileUploaded(file, isSuccess);
             }
         }
 
         void notifyFileListChanged() {
+            Log.d(LOG_TAG, "notifyFileListChanged");
             if (mDriveServiceBinderListener != null) {
                 mDriveServiceBinderListener.onFileListChanged();
             }
         }
 
         void notifySynchronizationStarted() {
+            Log.d(LOG_TAG, "notifySynchronizationStarted");
             if (mDriveServiceBinderListener != null) {
                 mDriveServiceBinderListener.onSynchronizationStarted();
             }
         }
 
         void notifySynchronisationFinished() {
+            Log.d(LOG_TAG, "notifySynchronisationFinished");
             if (mDriveServiceBinderListener != null) {
                 mDriveServiceBinderListener.onSynchronisationFinished();
             }
         }
 
         void notifyConnectedFailed(ConnectionResult connectionResult) {
+            Log.d(LOG_TAG, "notifyConnectedFailed");
             if (mDriveServiceBinderListener != null) {
                 mDriveServiceBinderListener.onConnectedFailed(connectionResult);
             }
         }
 
-        public void updateConfiguration()
-        {
+        public void updateConfiguration() {
             mDriveService.updateConfiguration();
         }
     }
@@ -137,16 +147,15 @@ public class DriveService extends BaseService {
                     @Override
                     public void onFilesChanged() {
                         Log.d(LOG_TAG, "onFilesChanged");
-                        if(mBinder != null) {
+                        if (mBinder != null) {
                             mBinder.notifyFileListChanged();
                         }
-
                     }
 
                     @Override
                     public void onFileUpload(File file, boolean isSuccess) {
                         Log.d(LOG_TAG, "onFileUpload");
-
+                        mBinder.notifyFileUploaded(file, isSuccess);
                     }
 
                     @Override
@@ -160,6 +169,7 @@ public class DriveService extends BaseService {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d(LOG_TAG, "onDestroy");
         mStorageManager = null;
     }
 
@@ -199,22 +209,11 @@ public class DriveService extends BaseService {
 
     }
 
-    private void onFileUpload(File file, Boolean isSuccess) {
-        Log.e(LOG_TAG, "onFileUpload");
-        mBinder.notifyFileUploaded(file, isSuccess);
-    }
-
     private void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.e(LOG_TAG, "onConnectionFailed");
+        Log.d(LOG_TAG, "onConnectionFailed");
 
         if (mBinder != null) {
-            if (connectionResult.hasResolution()) {
-                mBinder.notifyConnectedFailed(connectionResult);
-            } else {
-                Log.e(LOG_TAG,
-                        "onConnectionFailed: RemoteDrive connection was failed:"
-                                + connectionResult.getErrorMessage());
-            }
+            mBinder.notifyConnectedFailed(connectionResult);
         } else {
             sendNotification(connectionResult);
         }
@@ -250,26 +249,24 @@ public class DriveService extends BaseService {
         return mStorageManager.getImages();
     }
 
-    public void handleRemoteDriveProblemSolved()
-    {
+    public void handleRemoteDriveProblemSolved() {
         Log.d(LOG_TAG, "handleRemoteDriveProblemSolved");
         mStorageManager.handleRemoteDriveProblemSolved();
     }
 
-    private void setRepeating()
-    {
+    private void setRepeating() {
+        Log.d(LOG_TAG, "setRepeating");
         ConfigurationManager configurationManager = new ConfigurationManager(this);
-        Configuration configuration =  configurationManager.getConfiguration();
+        Configuration configuration = configurationManager.getConfiguration();
 
-        AlarmManager alarmManager =(AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 //        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
 //                0,
 //                configuration.getSyncPeriod() * 1000,
 //                getPendingIntent(ctxt));
     }
 
-    void updateConfiguration()
-    {
-
+    void updateConfiguration() {
+        Log.d(LOG_TAG, "updateConfiguration");
     }
 }

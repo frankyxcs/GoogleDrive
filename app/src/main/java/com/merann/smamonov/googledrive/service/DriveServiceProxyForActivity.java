@@ -44,58 +44,6 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
 
         mActivityContext = activity;
         mDriveServiceProxyListener = driveServiceProxyListener;
-
-//        mServiceConnection = new ServiceConnection() {
-//            @Override
-//            public void onServiceConnected(ComponentName name, IBinder service) {
-//                Log.d(LOG_TAG, "onServiceConnected");
-//                mDriveServiceBinder = (DriveService.DriveServiceBinder) service;
-//
-//                mDriveServiceBinder.setListener(new DriveService.DriveServiceBinder.DriveServiceBinderListener() {
-//                    @Override
-//                    public void onFileUploaded(File file, Boolean isSuccess) {
-//                        Log.d(LOG_TAG, "onFileUploaded");
-//                        mDriveServiceProxyListener.onFileUploadNotification(file.getPath(), isSuccess);
-//                    }
-//
-//                    @Override
-//                    public void onFileListChanged() {
-//                        Log.d(LOG_TAG, "onFileListChanged");
-//                        mDriveServiceProxyListener.onNewFileNotification();
-//                    }
-//
-//                    @Override
-//                    public void onSynchronizationStarted() {
-//                        Log.d(LOG_TAG, "onSynchronizationStarted");
-//                    }
-//
-//                    @Override
-//                    public void onSynchronisationFinished() {
-//                        Log.d(LOG_TAG, "onSynchronisationFinished");
-//                    }
-//
-//                    @Override
-//                    public void onConnectedFailed(ConnectionResult connectionResult) {
-//                        Log.d(LOG_TAG, "onConnectedFailed");
-//                        handleConnectionResolutionRequest(connectionResult);
-//                    }
-//                });
-//
-//                mDriveServiceProxyListener.onNewFileNotification();
-//
-//            }
-//
-//            @Override
-//            public void onServiceDisconnected(ComponentName name) {
-//                Log.d(LOG_TAG, "onServiceConnected");
-//            }
-//        };
-//
-//        Intent bindIntent = new Intent(DriveService.INTEND_STRING);
-//
-//        mActivityContext.bindService(bindIntent,
-//                mServiceConnection,
-//                Context.BIND_AUTO_CREATE);
     }
 
     public void handleAuthenticationRequest(Intent intent) {
@@ -105,6 +53,7 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
     }
 
     public void handleConnectionResolutionRequest(ConnectionResult connectionResult) {
+        Log.d(LOG_TAG, "handleConnectionResolutionRequest");
         if (connectionResult.hasResolution()) {
             try {
                 connectionResult.startResolutionForResult(mActivityContext,
@@ -148,6 +97,7 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
     }
 
     public void doSync() {
+        Log.d(LOG_TAG, "doSync");
         mDriveServiceBinder.doSync();
     }
 
@@ -165,7 +115,7 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
                     @Override
                     public void onFileUploaded(File file, Boolean isSuccess) {
                         Log.d(LOG_TAG, "onFileUploaded");
-                        mDriveServiceProxyListener.onFileUploadNotification(file.getPath(), isSuccess);
+                        mDriveServiceProxyListener.onFileUploadNotification(file.getName(), isSuccess);
                     }
 
                     @Override
@@ -219,8 +169,7 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
         return mDriveServiceBinder.getImagesList();
     }
 
-    public void updateConfiguration()
-    {
+    public void updateConfiguration() {
         Log.d(LOG_TAG, "updateConfiguration");
         mDriveServiceBinder.updateConfiguration();
     }

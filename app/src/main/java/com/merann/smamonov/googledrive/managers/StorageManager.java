@@ -62,6 +62,14 @@ public class StorageManager {
 
             @Override
             public void onConnectionFailed(ConnectionResult connectionResult) {
+
+                Iterator fileToBeLoadIterator = mFilesToBeUploaded.entrySet().iterator();
+                while (fileToBeLoadIterator.hasNext()) {
+                    File file = ((HashMap.Entry<String, File>) fileToBeLoadIterator.next()).getValue();
+                    mStorageManagerListener.onFileUpload(file, false);
+                    fileToBeLoadIterator.remove();
+                }
+
                 Log.d(LOG_TAG, "onConnectionFailed");
                 mStorageManagerListener.onConnectionFailed(connectionResult);
             }
@@ -71,7 +79,6 @@ public class StorageManager {
                 Log.d(LOG_TAG, "onConnectionEstablished");
 
                 Iterator fileToBeLoadIterator = mFilesToBeUploaded.entrySet().iterator();
-
                 while (fileToBeLoadIterator.hasNext()) {
                     File file = ((HashMap.Entry<String, File>) fileToBeLoadIterator.next()).getValue();
                     mRemoteStorageManager.uploadFileAsync(file);
@@ -171,14 +178,13 @@ public class StorageManager {
     }
 
     public void uploadFile(File file) {
-        Log.d(LOG_TAG, "uploadFile");
+        Log.d(LOG_TAG, "uploadFile: " + file.getPath());
 
         isSyncNeeded = true;
 
         if (mRemoteStorageManager.isConnected()) {
             mRemoteStorageManager.uploadFileAsync(file);
         } else {
-
             mFilesToBeUploaded.put(file.getName(), file);
             mRemoteStorageManager.connect();
         }
