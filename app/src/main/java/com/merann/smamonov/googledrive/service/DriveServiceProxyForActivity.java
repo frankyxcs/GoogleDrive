@@ -44,6 +44,8 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
 
         mActivityContext = activity;
         mDriveServiceProxyListener = driveServiceProxyListener;
+
+        start();
     }
 
     public void handleAuthenticationRequest(Intent intent) {

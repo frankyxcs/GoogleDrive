@@ -1,4 +1,5 @@
 package com.merann.smamonov.googledrive.service;
+
 import android.app.IntentService;
 import android.content.Intent;
 import android.util.Log;
@@ -15,7 +16,9 @@ public class BaseService extends IntentService implements IMessageReceiver, IMes
     public BaseService(String logTag, String intentString) {
         super(mLogTag);
         this.mLogTag = logTag;
-        mServiceMessageHandler = new ServiceMessageHandler(this, mLogTag, intentString);
+        mServiceMessageHandler = new ServiceMessageHandler(this,
+                mLogTag,
+                intentString);
         Log.d(mLogTag, "BaseService");
     }
 

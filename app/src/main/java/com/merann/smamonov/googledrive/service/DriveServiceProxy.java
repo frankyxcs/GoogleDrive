@@ -30,7 +30,7 @@ public class DriveServiceProxy extends ProxyMessageHandler {
 
     public void start()
     {
-        Log.d(LOG_TAG, "connect");
+        Log.d(LOG_TAG, "start");
         sendMessage(createMessage(Message.REMOTE_DRIVE_START));
     }
 

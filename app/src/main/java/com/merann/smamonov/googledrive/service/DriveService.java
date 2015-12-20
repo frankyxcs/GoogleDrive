@@ -43,6 +43,7 @@ public class DriveService extends BaseService {
         DriveService mDriveService;
         DriveServiceBinderListener mDriveServiceBinderListener;
 
+
         public DriveServiceBinder(DriveService driveService) {
             super();
             Log.d(LOG_TAG, "DriveServiceBinder");
@@ -116,6 +117,7 @@ public class DriveService extends BaseService {
     }
 
     static public final String INTEND_STRING = "com.merann.smamonov.googledrive.DriveService";
+    static private final int PERIODIC_START_REQUEST_CODE = 1;
     static private final String LOG_TAG = "DriveService";
 
     private StorageManager mStorageManager;
@@ -138,7 +140,9 @@ public class DriveService extends BaseService {
         addMessageHandler(Message.REMOTE_DRIVE_START, new IMessageHandler() {
             @Override
             public void onIntent(Intent intent) {
-                Log.d(LOG_TAG, "REMOTE_DRIVE_START");
+                Log.e(LOG_TAG, "REMOTE_DRIVE_START");
+                setRepeating();
+                doSync();
             }
         });
 
@@ -259,14 +263,26 @@ public class DriveService extends BaseService {
         ConfigurationManager configurationManager = new ConfigurationManager(this);
         Configuration configuration = configurationManager.getConfiguration();
 
+        Intent intent = new Intent(getApplicationContext(),
+                DriveService.class)
+                .putExtra(Message.class.getName(),
+                        Message.REMOTE_DRIVE_START);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this,
+                PERIODIC_START_REQUEST_CODE,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-//        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
-//                0,
-//                configuration.getSyncPeriod() * 1000,
-//                getPendingIntent(ctxt));
+
+        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,
+                System.currentTimeMillis(),
+                configuration.getSyncPeriod() * 1000,
+                pendingIntent);
     }
 
     void updateConfiguration() {
         Log.d(LOG_TAG, "updateConfiguration");
+        setRepeating();
     }
 }
