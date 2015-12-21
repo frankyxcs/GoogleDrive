@@ -122,6 +122,7 @@ public class DriveService extends BaseService {
 
     private StorageManager mStorageManager;
     private DriveServiceBinder mBinder;
+    private Boolean mConfigurationUpdate = false;
 
     public DriveService() {
         super(LOG_TAG, INTEND_STRING);
@@ -140,7 +141,7 @@ public class DriveService extends BaseService {
         addMessageHandler(Message.REMOTE_DRIVE_START, new IMessageHandler() {
             @Override
             public void onIntent(Intent intent) {
-                Log.e(LOG_TAG, "REMOTE_DRIVE_START");
+                Log.d(LOG_TAG, "REMOTE_DRIVE_START");
                 setRepeating();
                 doSync();
             }
@@ -175,6 +176,12 @@ public class DriveService extends BaseService {
         super.onDestroy();
         Log.d(LOG_TAG, "onDestroy");
         mStorageManager = null;
+    }
+
+    @Override
+    public void handleSimpleIntent(Intent intent) {
+        Log.e(LOG_TAG, "handleSimpleIntent");
+        doSync();
     }
 
     private void sendNotification(ConnectionResult connectionResult) {
@@ -259,7 +266,7 @@ public class DriveService extends BaseService {
     }
 
     private void setRepeating() {
-        Log.d(LOG_TAG, "setRepeating");
+        Log.e(LOG_TAG, "setRepeating");
         ConfigurationManager configurationManager = new ConfigurationManager(this);
         Configuration configuration = configurationManager.getConfiguration();
 
@@ -268,21 +275,39 @@ public class DriveService extends BaseService {
                 .putExtra(Message.class.getName(),
                         Message.REMOTE_DRIVE_START);
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this,
+        PendingIntent pendingIntent1 = PendingIntent.getBroadcast(this,
                 PERIODIC_START_REQUEST_CODE,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent.FLAG_NO_CREATE);
 
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if(null == pendingIntent1 ||
+                mConfigurationUpdate == true) {
 
-        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis(),
-                configuration.getSyncPeriod() * 1000,
-                pendingIntent);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(this,
+                    PERIODIC_START_REQUEST_CODE,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+            long newTimePeriod = configuration.getSyncPeriod() * 1000 * 60;
+
+            alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,
+                    System.currentTimeMillis(),
+                    newTimePeriod,
+                    pendingIntent);
+
+            Log.e(LOG_TAG, "update alarm time to:" + newTimePeriod);
+
+            mConfigurationUpdate = false;
+        }
     }
 
     void updateConfiguration() {
         Log.d(LOG_TAG, "updateConfiguration");
+
+        mConfigurationUpdate = true;
+
         setRepeating();
     }
 }

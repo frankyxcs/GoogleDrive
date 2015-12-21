@@ -53,7 +53,6 @@ public abstract class MessageReceiver implements IMessageReceiver {
 
     @Override
     public void addMessageHandler(Message messageId, IMessageHandler handler) {
-        //Log.d(mLogTag, "addHandler: messageId" + messageId);
         mCommandHandlers.put(messageId, handler);
     }
 
@@ -64,8 +63,14 @@ public abstract class MessageReceiver implements IMessageReceiver {
         if (intent != null) {
             Message messageId = (Message)intent.getSerializableExtra(Message.class.getName());
 
-            if (mCommandHandlers.containsKey(messageId)) {
-                mCommandHandlers.get(messageId).onIntent(intent);
+            if (messageId != null) {
+                if (mCommandHandlers.containsKey(messageId)) {
+                    mCommandHandlers.get(messageId).onIntent(intent);
+                }
+            }
+            else
+            {
+                handleSimpleIntent(intent);
             }
         }
     }
@@ -85,5 +90,11 @@ public abstract class MessageReceiver implements IMessageReceiver {
 
     public String getIntendString() {
         return mIntentString;
+    }
+
+    @Override
+    public void handleSimpleIntent(Intent intent)
+    {
+        // do nothing
     }
 }

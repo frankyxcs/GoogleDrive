@@ -38,7 +38,7 @@ public class BaseService extends IntentService implements IMessageReceiver, IMes
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.d(mLogTag, "onHandleIntent");
+        Log.e(mLogTag, "onHandleIntent");
         mServiceMessageHandler.dispatchMessage(intent);
     }
 
@@ -74,5 +74,10 @@ public class BaseService extends IntentService implements IMessageReceiver, IMes
     public void dispatchMessage(Intent intent) {
         Log.d(mLogTag, "dispatchMessage");
         mServiceMessageHandler.sendMessage(intent);
+    }
+
+    @Override
+    public void handleSimpleIntent(Intent intent) {
+        //do nothing
     }
 }

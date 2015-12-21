@@ -14,9 +14,9 @@ public interface IMessageReceiver {
 
     Intent createMessage(Message messageId);
 
-//    String getIntendString();
-
     void sendMessage(Intent intent);
 
     void dispatchMessage(Intent intent);
+
+    void handleSimpleIntent(Intent intent);
 }

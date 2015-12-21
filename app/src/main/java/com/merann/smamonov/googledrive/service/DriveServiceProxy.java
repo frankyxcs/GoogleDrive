@@ -33,16 +33,4 @@ public class DriveServiceProxy extends ProxyMessageHandler {
         Log.d(LOG_TAG, "start");
         sendMessage(createMessage(Message.REMOTE_DRIVE_START));
     }
-
-    /* business logic */
-    public void handleConfigurationUpdate(Configuration newConfiguration) {
-        Log.d(LOG_TAG, "handleConfigurationUpdate");
-        sendMessage(createMessage(Message.REMOTE_DRIVE_CONFIGURATION_UPDATE_NOTIFICATION)
-                .putExtra(Configuration.class.getName(), newConfiguration));
-    }
-
-    public void handleConnectionEstablished() {
-        Log.d(LOG_TAG, "handleConnectionEstablished");
-        sendMessage(createMessage(Message.REMOTE_DRIVE_LOAD_FILES_REQUEST));
-    }
 }

@@ -145,11 +145,10 @@ public class ImageService {
             inputStream = new FileInputStream(file);
             result = BitmapFactory.decodeStream(inputStream, null, bitmapOptions);
             inputStream.close();
+            Log.d(LOG_TAG, "loadIcon: image icon was loaded, size:" + result.getByteCount());
         } catch (Throwable throwable) {
             Log.d(LOG_TAG, "loadIcon: unable to load file icon");
         }
-
-        Log.d(LOG_TAG, "loadIcon: image icon was loaded, size:" + result.getByteCount());
 
         return result;
     }
