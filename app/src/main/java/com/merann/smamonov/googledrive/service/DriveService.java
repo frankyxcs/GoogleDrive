@@ -271,36 +271,27 @@ public class DriveService extends BaseService {
         Configuration configuration = configurationManager.getConfiguration();
 
         Intent intent = new Intent(getApplicationContext(),
-                DriveService.class)
+                DriveService.class)/*
                 .putExtra(Message.class.getName(),
-                        Message.REMOTE_DRIVE_START);
+                        Message.REMOTE_DRIVE_START)*/;
 
-        PendingIntent pendingIntent1 = PendingIntent.getBroadcast(this,
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this,
                 PERIODIC_START_REQUEST_CODE,
                 intent,
-                PendingIntent.FLAG_NO_CREATE);
+                PendingIntent.FLAG_UPDATE_CURRENT);
 
-        if(null == pendingIntent1 ||
-                mConfigurationUpdate == true) {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(this,
-                    PERIODIC_START_REQUEST_CODE,
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT);
+        long newTimePeriod = configuration.getSyncPeriod() * 1000 * 60;
 
-            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,
+                System.currentTimeMillis(),
+                newTimePeriod,
+                pendingIntent);
 
-            long newTimePeriod = configuration.getSyncPeriod() * 1000 * 60;
+        Log.e(LOG_TAG, "update alarm time to:" + newTimePeriod);
 
-            alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,
-                    System.currentTimeMillis(),
-                    newTimePeriod,
-                    pendingIntent);
-
-            Log.e(LOG_TAG, "update alarm time to:" + newTimePeriod);
-
-            mConfigurationUpdate = false;
-        }
+        mConfigurationUpdate = false;
     }
 
     void updateConfiguration() {

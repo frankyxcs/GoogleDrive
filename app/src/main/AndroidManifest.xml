@@ -31,7 +31,8 @@
             android:label="@string/add_file_activity_caption" />
 
         <service android:name=".service.DriveService"
-            android:exported="true">
+            android:exported="true"
+            android:enabled="true">
             <intent-filter>
                 <action android:name="com.merann.smamonov.googledrive.DriveService" />
             </intent-filter>
