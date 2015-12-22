@@ -17,6 +17,7 @@ public class DriveBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(LOG_TAG, "onReceive");
+        Log.e(LOG_TAG, "onReceive android.intent.action.BOOT_COMPLETED");
         DriveServiceProxy driveServiceProxy = new DriveServiceProxy(context);
         driveServiceProxy.start();
     }

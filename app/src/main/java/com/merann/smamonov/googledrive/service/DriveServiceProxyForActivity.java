@@ -44,8 +44,6 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
 
         mActivityContext = activity;
         mDriveServiceProxyListener = driveServiceProxyListener;
-
-        start();
     }
 
     public void handleAuthenticationRequest(Intent intent) {
@@ -113,7 +111,7 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
                 Log.d(LOG_TAG, "onServiceConnected");
                 mDriveServiceBinder = (DriveService.DriveServiceBinder) service;
 
-                mDriveServiceBinder.setListener(new DriveService.DriveServiceBinder.DriveServiceBinderListener() {
+                mDriveServiceBinder.setListener(new DriveService.DriveServiceBinderListener() {
                     @Override
                     public void onFileUploaded(File file, Boolean isSuccess) {
                         Log.d(LOG_TAG, "onFileUploaded");
@@ -144,7 +142,6 @@ public class DriveServiceProxyForActivity extends DriveServiceProxy {
                 });
 
                 mDriveServiceProxyListener.onNewFileNotification();
-
             }
 
             @Override

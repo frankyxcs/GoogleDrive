@@ -76,7 +76,7 @@ public class StorageManager {
 
             @Override
             public void onConnectionEstablished() {
-                Log.d(LOG_TAG, "onConnectionEstablished");
+                Log.d(LOG_TAG, "onConnectionEstablished: isSyncNeeded=" + isSyncNeeded);
 
                 Iterator fileToBeLoadIterator = mFilesToBeUploaded.entrySet().iterator();
                 while (fileToBeLoadIterator.hasNext()) {
@@ -173,8 +173,8 @@ public class StorageManager {
 
     public void doSync() {
         Log.d(LOG_TAG, "doSync");
-        mRemoteStorageManager.connect();
         isSyncNeeded = true;
+        mRemoteStorageManager.connect();
     }
 
     public void uploadFile(File file) {
@@ -192,7 +192,8 @@ public class StorageManager {
 
     public void handleRemoteDriveProblemSolved() {
         Log.d(LOG_TAG, "handleRemoteDriveProblemSolved");
-        mRemoteStorageManager.connect();
+        doSync();
+        //mRemoteStorageManager.connect();
     }
 
 

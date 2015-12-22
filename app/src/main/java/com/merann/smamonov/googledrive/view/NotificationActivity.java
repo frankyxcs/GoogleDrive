@@ -16,12 +16,37 @@ public class NotificationActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(LOG_TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification);
-        mDriveServiceProxy = new DriveServiceProxyForActivity(this, null);
+        mDriveServiceProxy = new DriveServiceProxyForActivity(this, new DriveServiceProxyForActivity.DriveServiceProxyListener() {
+            @Override
+            public void onConnectionStateChange(boolean isConneted) {
+                Log.d(LOG_TAG, "onConnectionStateChange");
+            }
+
+            @Override
+            public void onNewFileNotification() {
+                Log.d(LOG_TAG, "onNewFileNotification");
+            }
+
+            @Override
+            public void onFileUploadNotification(String fileName, Boolean isSuccess) {
+                Log.d(LOG_TAG, "onFileUploadNotification");
+            }
+        });
+
+        mDriveServiceProxy.bind();
 
         Intent intent = getIntent();
         mDriveServiceProxy.handleAuthenticationRequest(intent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d(LOG_TAG, "onDestroy");
+        super.onDestroy();
+        mDriveServiceProxy.unBind();
     }
 
     @Override
@@ -36,5 +61,7 @@ public class NotificationActivity extends AppCompatActivity {
         }
         finish();
     }
+
+
 }
 

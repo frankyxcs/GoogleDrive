@@ -70,7 +70,7 @@ public abstract class MessageReceiver implements IMessageReceiver {
             }
             else
             {
-                handleSimpleIntent(intent);
+                Log.e(mLogTag, "Intent has no messageId filed");
             }
         }
     }
@@ -90,11 +90,5 @@ public abstract class MessageReceiver implements IMessageReceiver {
 
     public String getIntendString() {
         return mIntentString;
-    }
-
-    @Override
-    public void handleSimpleIntent(Intent intent)
-    {
-        // do nothing
     }
 }

@@ -17,6 +17,4 @@ public interface IMessageReceiver {
     void sendMessage(Intent intent);
 
     void dispatchMessage(Intent intent);
-
-    void handleSimpleIntent(Intent intent);
 }

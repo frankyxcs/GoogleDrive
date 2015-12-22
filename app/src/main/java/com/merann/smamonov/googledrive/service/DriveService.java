@@ -25,50 +25,50 @@ import java.util.List;
  */
 public class DriveService extends BaseService {
 
-    static public class DriveServiceBinder extends Binder {
+    interface DriveServiceBinderListener {
+        void onFileUploaded(File file, Boolean isSuccess);
 
-        interface DriveServiceBinderListener {
-            void onFileUploaded(File file, Boolean isSuccess);
+        void onFileListChanged();
 
-            void onFileListChanged();
+        void onSynchronizationStarted();
 
-            void onSynchronizationStarted();
+        void onSynchronisationFinished();
 
-            void onSynchronisationFinished();
+        void onConnectedFailed(ConnectionResult connectionResult);
+    }
 
-            void onConnectedFailed(ConnectionResult connectionResult);
-        }
+    public class DriveServiceBinder extends Binder {
 
         static private final String LOG_TAG = "DriveServiceBinder";
-        DriveService mDriveService;
+//        DriveService mDriveService;
         DriveServiceBinderListener mDriveServiceBinderListener;
 
 
-        public DriveServiceBinder(DriveService driveService) {
+        public DriveServiceBinder(/*DriveService driveServic*/) {
             super();
             Log.d(LOG_TAG, "DriveServiceBinder");
             mDriveServiceBinderListener = null;
-            mDriveService = driveService;
+//            mDriveService = driveService;
         }
 
         public List<Image> getImagesList() {
             Log.d(LOG_TAG, "getImagesList");
-            return mDriveService.getImagesList();
+            return DriveService.this.getImagesList();
         }
 
         public void doSync() {
             Log.d(LOG_TAG, "doSync");
-            mDriveService.doSync();
+            DriveService.this.doSync();
         }
 
         public void uploadFile(File file) {
             Log.d(LOG_TAG, "uploadFile: " + file.getPath());
-            mDriveService.uploadFile(file);
+            DriveService.this.uploadFile(file);
         }
 
         public void handleRemoteDriveProblemSolved() {
             Log.d(LOG_TAG, "handleRemoteDriveProblemSolved");
-            mDriveService.handleRemoteDriveProblemSolved();
+            DriveService.this.handleRemoteDriveProblemSolved();
         }
 
         public void setListener(DriveServiceBinderListener listener) {
@@ -112,7 +112,7 @@ public class DriveService extends BaseService {
         }
 
         public void updateConfiguration() {
-            mDriveService.updateConfiguration();
+            DriveService.this.updateConfiguration();
         }
     }
 
@@ -178,12 +178,6 @@ public class DriveService extends BaseService {
         mStorageManager = null;
     }
 
-    @Override
-    public void handleSimpleIntent(Intent intent) {
-        Log.e(LOG_TAG, "handleSimpleIntent");
-        doSync();
-    }
-
     private void sendNotification(ConnectionResult connectionResult) {
         Log.e(LOG_TAG, "sendNotification");
 
@@ -196,7 +190,7 @@ public class DriveService extends BaseService {
                 .putExtra(ConnectionResult.class.toString(),
                         connectionResult);
 
-        String title = "title";
+        String title = "Unable to connect to remote disk";
         String content = "content";
 
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
@@ -244,7 +238,7 @@ public class DriveService extends BaseService {
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(LOG_TAG, "onBind");
-        mBinder = new DriveServiceBinder(this);
+        mBinder = new DriveServiceBinder(/*this*/);
         return mBinder;
     }
 
@@ -266,39 +260,48 @@ public class DriveService extends BaseService {
     }
 
     private void setRepeating() {
-        Log.e(LOG_TAG, "setRepeating");
-        ConfigurationManager configurationManager = new ConfigurationManager(this);
-        Configuration configuration = configurationManager.getConfiguration();
+        Log.d(LOG_TAG, "setRepeating");
 
         Intent intent = new Intent(getApplicationContext(),
-                DriveService.class)/*
+                DriveService.class)
                 .putExtra(Message.class.getName(),
-                        Message.REMOTE_DRIVE_START)*/;
+                        Message.REMOTE_DRIVE_START);
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this,
+        PendingIntent checkIntent = PendingIntent.getService(this,
                 PERIODIC_START_REQUEST_CODE,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent.FLAG_NO_CREATE);
 
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Log.e(LOG_TAG, "setRepeating: intent :" + (checkIntent == null ? "null" : "not null"));
 
-        long newTimePeriod = configuration.getSyncPeriod() * 1000 * 60;
+        if (mConfigurationUpdate == true
+                || checkIntent == null) {
+            ConfigurationManager configurationManager = new ConfigurationManager(this);
+            Configuration configuration = configurationManager.getConfiguration();
 
-        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis(),
-                newTimePeriod,
-                pendingIntent);
+            PendingIntent pendingIntent = PendingIntent.getService(this,
+                    PERIODIC_START_REQUEST_CODE,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Log.e(LOG_TAG, "update alarm time to:" + newTimePeriod);
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
-        mConfigurationUpdate = false;
+            long newTimePeriod = configuration.getSyncPeriod() * 1000 * 60;
+
+            alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,
+                    System.currentTimeMillis(),
+                    newTimePeriod,
+                    pendingIntent);
+
+            Log.e(LOG_TAG, "update alarm time to:" + newTimePeriod);
+
+            mConfigurationUpdate = false;
+        }
     }
 
     void updateConfiguration() {
         Log.d(LOG_TAG, "updateConfiguration");
-
         mConfigurationUpdate = true;
-
         setRepeating();
     }
 }

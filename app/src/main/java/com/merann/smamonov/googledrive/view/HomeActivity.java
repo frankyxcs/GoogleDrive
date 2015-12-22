@@ -83,6 +83,8 @@ public class HomeActivity extends AppCompatActivity {
 
         mDriveServiceProxy.bind();
         updateListView();
+
+        mDriveServiceProxy.start();
     }
 
     private void updateListView() {
