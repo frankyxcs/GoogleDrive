@@ -190,8 +190,8 @@ public class DriveService extends BaseService {
                 .putExtra(ConnectionResult.class.toString(),
                         connectionResult);
 
-        String title = "Unable to connect to remote disk";
-        String content = "content";
+        String title = "Connecting issue";
+        String content = "Unable to connect to remote disk";
 
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 1,
