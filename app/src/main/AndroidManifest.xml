@@ -37,16 +37,17 @@
         </service>
 
         <activity android:name=".view.NotificationActivity"></activity>
+
+        <receiver
+            android:name=".receiver.DriveBroadcastReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+            </intent-filter>
+        </receiver>
+
     </application>
 
-    <receiver
-        android:name=".receiver.DriveBroadcastReceiver"
-        android:enabled="true"
-        android:exported="true"
-        android:label="DriveBroadcastReceiver">
-        <intent-filter>
-            <action android:name="android.intent.action.BOOT_COMPLETED"></action>
-        </intent-filter>
-    </receiver>
+
 
 </manifest>
